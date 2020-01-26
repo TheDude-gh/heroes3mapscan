@@ -28,14 +28,13 @@ require_once 'fun/mi.php';
 </style>
 </head>
 <body>
-<a href="mapscan.php">Reaload</a> | <a href="mapindex.php">Map List</a> <br />
+<a href="mapscan.php">Reload</a> | <a href="mapindex.php">Map List</a> <br />
 <?php
 
 
 require_once 'fun/mapscanf.php';
 require_once 'fun/mapsupport.php';
 require_once 'fun/mapconstants.php';
-
 
 $mapok = false;
 $buildmap = true;
@@ -63,7 +62,7 @@ if(!empty($files)) {
 	$maplist = '';
 	$maplistjs = array();
 
-	foreach($files as $mfile) {
+	foreach($files as $k => $mfile) {
 		$mapname = str_replace(MAPDIR, '', $mfile);
 		$par = base64_encode($mapname);
 		if($mapcode == $par) {
@@ -79,7 +78,7 @@ if(!empty($files)) {
 
 		$maplistjs[] = $smapname;
 
-		$maplist .= '<a href="?mapcode='.$par.'">'.$mapname.'</a><br />';
+		$maplist .= ($k + 1).' <a href="?mapcode='.$par.'">'.$mapname.'</a><br />';
 		$displayed++;
 	}
 
@@ -87,9 +86,9 @@ if(!empty($files)) {
 		echo 'There are no maps to proccess in map folder. You can go to <a href="mapindex.php">Map List</a>';
 	}
 	else {
-    echo '<a href="saveall" id="mapread" onclick="return false;">Read and save all maps</a><br />';
-    echo '<p>'.$maplist.'</p>';
-    echo '<p id="maplist"></p>';
+		echo '<a href="saveall" id="mapread" onclick="return false;">Read and save all maps</a><br />';
+		echo '<p>'.$maplist.'</p>';
+		echo '<p id="maplist"></p>';
 		echo '<script type="text/javascript">'.EOL.'var maplist = ['.EOL.TAB.'"'.implode($maplistjs, '",'.EOL.TAB.'"').'"'.EOL.']'.EOL.'</script>';
 	}
 
@@ -97,10 +96,10 @@ if(!empty($files)) {
 
 
 if($mapfiledb) {
-  //$mapfile = 'maps/'.str_ireplace('.h3m', '_ugz.h3m', $mapfiledb);
-  $mapfile = MAPDIR.$mapfiledb;
-  $mapok = true;
-  $buildmap = false;
+	//$mapfile = 'maps/'.str_ireplace('.h3m', '_ugz.h3m', $mapfiledb);
+	$mapfile = MAPDIR.$mapfiledb;
+	$mapok = true;
+	//$buildmap = false; //for debug cancel
 }
 elseif($mapcode) {
   $mapok = true;
@@ -109,15 +108,18 @@ elseif($mapcode) {
 //read some maps only
 if($mapok) {
 	//mq("TRUNCATE heroes_maps");
-	vd(5);
+	global $tm;
 	$tm = new TimeMeasure();
 	$map = new H3MAPSCAN($mapfile, true);
+	//$buildmap = true;
 	$map->PrintStateSet(true, $buildmap);
 	$map->SetSaveMap(1);
 	$map->ReadMap();
 	
-	$tm->Measure();
-	$tm->showTime();
+	$tm->Measure('End');
+	$tm->showTimes();
+
+	//$map->ObjectsShow();
 }
 
 //read all maps

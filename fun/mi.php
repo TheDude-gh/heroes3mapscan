@@ -3,8 +3,8 @@
 		global $db_link;
 		if($db_link) return $db_link;
 		global $_cfg;
-		$db_link = mysqli_connect($_cfg['mq.host'], $_cfg['mq.user'], $_cfg['mq.pass'], $_cfg['mq.db'], $_cfg['mq.port']) or die('Aplikace nedostupná' );
-		mq("SET NAMES 'UTF8'");
+		$db_link = mysqli_connect($_cfg['mq.host'], $_cfg['mq.user'], $_cfg['mq.pass'], $_cfg['mq.db'], $_cfg['mq.port']) or die('Database not connected');
+		mq("SET NAMES 'utf8mb4'");
 		return $db_link;
 	}
 

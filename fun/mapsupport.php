@@ -108,9 +108,13 @@ function tmc(){
 }
 
 function FromArray($key, $array, $def = '?') {
-	if(!is_array($array)) return $def;
-	if(array_key_exists($key, $array)) return $array[$key];
-	return $def;
+	if(!is_array($array)) {
+		return $def;
+	}
+	if(array_key_exists($key, $array)) {
+		return $array[$key];
+	}
+	return $def.' ['.$key.']';
 }
 
 function ByteBin($byte) {
@@ -122,21 +126,43 @@ class TimeMeasure {
 	private $start;
 	private $prev = 0;
 	private $now;
+	private $times = array();
 	
 	public function __construct () {
 		$this->start = tmc();
+		$this->times[] = array('start', $this->start);
 	}
 	
-	public function Measure(){
+	public function Measure($desc = ''){
 		$this->prev = $this->prev == 0 ? $this->start : $this->now;
 		$this->now = tmc();
+		$this->times[] = array($desc, $this->now);
 	}
 	
 	public function ShowTime($print = 1, $pos = -1, $text = '') {
-		if($pos == -1) $echo = sprintf('%3.3f', ($this->now - $this->start)).' s'.ENVE;
-		else $echo = sprintf('%5d	%4.3fs	%4.3fs	', $pos, ($this->now - $this->start), ($this->now - $this->prev)).' '.$text.ENVE;
-		if($print) echo $echo;
-		else return $echo;
+		if($pos == -1) {
+			$echo = sprintf('%3.3f', ($this->now - $this->start)).' s'.ENVE;
+		}
+		else {
+			$echo = sprintf('%5d	%4.3fs	%4.3fs	', $pos, ($this->now - $this->start), ($this->now - $this->prev)).' '.$text.ENVE;
+		}
+		if($print) {
+			echo $echo;
+		}
+		else {
+			return $echo;
+		}
+	}
+
+	public function ShowTimes() {
+		$prev = $this->start;
+		echo '<table>';
+		foreach($this->times as $timed) {
+			list($desc, $time) = $timed;
+			echo '<tr><td>'.$desc.'</td><td>'.sprintf('%4.3f s</td><td>%4.3f s', ($time - $prev), ($time - $this->start)).'</td></tr>';
+			$prev = $time;
+		}
+		echo '</table>';
 	}
 	
 }

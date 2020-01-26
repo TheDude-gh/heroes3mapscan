@@ -13,13 +13,6 @@
 	//folder with map images
 	DEFINE('MAPDIRIMG', './mapsimg/');
 
-	global $_cfg;
-		$_cfg = array(
-		'mq.host' => 'localhost',
-		'mq.user' => '',
-		'mq.pass' => '',
-		'mq.db'   => '',
-		'mq.port' => '3306',
-	);
+	require_once './fun/access.php';
 	
 ?>

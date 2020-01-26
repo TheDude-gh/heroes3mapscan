@@ -1,3 +1,8 @@
 /mapsimg/*.png
 *.png
 *.h3m
+/map_compare.php
+/dev
+/maps/*.h3c
+/maps/*.tut
+/fun/access.php

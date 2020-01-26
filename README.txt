@@ -7,6 +7,8 @@ Licence: GNU GENERAL PUBLIC LICENSE Version 3
 
 1. BRIEF DESCRIPTION
   Heroes III Map Reader is web based application for reading Heroes III maps, displaying map's details, saving map to image and saving to sql database.
+  It can read ROE, AB, SOD, WOG, ERA and HOTA maps (up to HOTA subrevision 3).
+  
   Application is written in PHP, and uses MySQL database.
 
   You can see example here http://heroes.novapolis.net/mapindex.php
@@ -21,6 +23,7 @@ Licence: GNU GENERAL PUBLIC LICENSE Version 3
   a) Copy all the files to chosen folder on your webserver.
   b) In fun/config.php file set paths to the required data and access to database. You can leave it as that if you copy data to these folders,
      or you can set your own.
+     Also copy and rename fun/access.def.php to fun/access.php and setup database access data in it.
 
 
 4. USAGE
@@ -34,7 +37,8 @@ Licence: GNU GENERAL PUBLIC LICENSE Version 3
      This script shows list of saved maps, and by clicking on any map, it will show more details.
      Those details are not very user friendly at some points, but the purpose of this application is to provide PHP map reader.
      The interpretation of map data is up to any Heroes III web map provider.
-     The application does not display everything in web window, but it reads almost complete map data, like you would see in Heroes III map editor,
+     The application does not display everything in web window, but it reads almost complete map data, like you would see
+     in Heroes III map editor,
      like locations of any element, any texts, triggers, and so on. You could display those too, if you would desire so.
 
 5. NOTES
@@ -47,8 +51,8 @@ Licence: GNU GENERAL PUBLIC LICENSE Version 3
   Big thanks to team working on VCMI project https://vcmi.eu/, which sources I used to study map structure of Heroes III and WOG.
   As for HOTA map structure, I had to decode it more or less myself, but there was not many differences anyway.
 
-	Also thanks to some unnamed another PHP Heroes III map reader I found on web, which also helped with understanding Heroes III maps.
-	Currently I don't remember it's name and author, but once I dig that up, it will be credited properly.
+  Also thanks to some unnamed another PHP Heroes III map reader I found on web, which also helped with understanding Heroes III maps.
+  Currently I don't remember it's name and author, but once I dig that up, it will be credited properly.
 
   This application also uses 3rd party code, included in GIT:
   jQuery  https://jquery.com/ ... jQuery is under MIT licence, so it is not under GNU GPLv3 like rest of this project. It is only included, so you don't have to obtain it yourself.

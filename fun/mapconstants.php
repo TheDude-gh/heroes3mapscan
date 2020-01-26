@@ -1,5 +1,13 @@
 <?php
 	const ALL_PLAYERS = 255; //bitfield
+	const OWNERNONE = 0xfe;
+	const OWNNOONE = 0xff;
+	const OBJECT_INVALID = -1; //invalid object id
+	const TILE_SPECIAL = 0x7ff; //just random number to mark special tile property
+	const COOR_INVALID = -1; //invalid coordinates
+	
+	const MAXINT32 = 1 << 31;
+	const MININT32 = 1 << 32; //without minus
 
 	const BACKPACK_START = 19;
 	const CREATURES_PER_TOWN = 7; //without upgrades
@@ -22,13 +30,14 @@
 	const ARTIFACTS_QUANTITY = 171;
 	const HEROES_QUANTITY = 156; //156 ? ROE,AB,SOD,WOG
 	const HEROES_QUANTITY_HOTA = 178; //HOTA
-	const SPELLS_QUANTITY = 70;
+	const SPELLS_QUANTITY = 70; //69 visible in editor
 	const CREATURES_COUNT = 197;
 
 	const PLAYERSNUM = 8;
 	const HNULL = 0;
 	const HNONE = 0xff;
 	const HNONETOWN = 0x1ff;
+	const HOTAMONSTERIDS = 151;
 	
 
 	class MAPOBJECTS {
@@ -228,10 +237,24 @@
 		const HERO = 8;
 		const PLAYER = 9;
 		const KEYMASTER = 10;
+		const HOTA_EXTRA = 10;
+		const HOTA_CLASS = 0;
+		const HOTA_NOTBEFORE = 1;
 	};
 	
 	
 	class HeroesConstants {
+
+		public $PlayersColours = [
+			0 => 'Red',
+			1 => 'Blue',
+			2 => 'Tan',
+			3 => 'Green',
+			4 => 'Orange',
+			5 => 'Purple',
+			6 => 'Teal',
+			7 => 'Pink',
+		];
 
 		public $PrimarySkill = [
 			0 => 'Attack',
@@ -654,6 +677,7 @@
 			147 => 'First Aid Tent (specialty X1)',
 			148 => 'Ammo Cart (specialty X1)',
 			149 => 'Arrow Towers (specialty X1)',
+			//WOG
 			150 => 'Supreme Archangel',
 			151 => 'Diamond Dragon',
 			152 => 'Lord of Thunder',
@@ -701,6 +725,29 @@
 			194 => 'Werewolf',
 			195 => 'Hell Steed',
 			196 => 'Dracolich',
+		];
+		
+		//HOTA
+		public $MonsterHota = [
+			151 => 'Sea Dog',
+			153 => 'Nymph',
+			154 => 'Oceanid',
+			155 => 'Crew Mate',
+			156 => 'Seaman',
+			157 => 'Pirate',
+			158 => 'Corsair',
+			159 => 'Stormbird',
+			160 => 'Ayssid',
+			161 => 'Sea Witch',
+			162 => 'Sorceress',
+			163 => 'Nix',
+			164 => 'Nix Warrior',
+			165 => 'Sea Serpent',
+			166 => 'Haspid',
+			167 => 'Leprechaun',
+			168 => 'Satyr',
+			169 => 'Steel Golem',
+			170 => 'Fangarm',
 		];
 
 		public $Objects = [
@@ -940,6 +987,16 @@
 			5 => 'Gem Pond',
 			6 => 'Gold Mine',
 			7 => 'Abandoned Mine',
+		];
+
+		public $Resources = [
+			0 => 'Wood',
+			1 => 'Mercury',
+			2 => 'Ore',
+			3 => 'Sulfur',
+			4 => 'Crystal',
+			5 => 'Gems',
+			6 => 'Gold',
 		];
 
 		public $Artefacts = [

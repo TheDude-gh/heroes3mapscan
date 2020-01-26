@@ -36,12 +36,13 @@ require_once 'fun/mapindexconst.php';
 <?php
 
 $cmd = exget('c', 'list');
+$qcol = exget('q', '');
+$qval = exget('v', '');
+
 if($cmd == 'stat') {
 	MapStats();
 }
-else {
-	$qcol = exget('q', '');
-	$qval = exget('v', '');
+elseif($qcol) {
 	$where = '';
 	
 	if($qcol != '' && $qval != ''){
