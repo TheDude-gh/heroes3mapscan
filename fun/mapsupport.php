@@ -84,7 +84,7 @@ class StringConvert {
 			chr(0x99) => '&trade;',
 			chr(0x9B) => '&rsquo;',
 			chr(0xA6) => '&brvbar;',
-      chr(0xA8) => 'Ë',
+			chr(0xA8) => 'Ë',
 			chr(0xA9) => '&copy;',
 			chr(0xAB) => '&laquo;',
 			chr(0xAE) => '&reg;',
@@ -92,7 +92,7 @@ class StringConvert {
 			chr(0xB5) => '&micro;',
 			chr(0xB6) => '&para;',
 			chr(0xB7) => '&middot;',
-      chr(0xB8) => 'ë',
+			chr(0xB8) => 'ë',
 			chr(0xBB) => '&raquo;',
 			chr(0xc0) => 'А',
 			chr(0xc1) => 'Б',
@@ -163,22 +163,22 @@ class StringConvert {
 
 	//proprietary conversion to standard ascii and w1251 for russian and check and conversion for chinese
 	public function Convert($text) {
-	  //there is no really easy and realiable way to detect correct language. So it's left as that for now
-	  //russian is selected here, because majority of non english maps is in russian
-	
+		//there is no really easy and realiable way to detect correct language. So it's left as that for now
+		//russian is selected here, because majority of non english maps is in russian
+
 		//try to detect chenese
-    //$chincheck = preg_match('/\p{Han}+/u', $text);
-    //$chincheck = preg_match('/[\x{4e00}-\x{9fa5}]+/u', $text);
+		//$chincheck = preg_match('/\p{Han}+/u', $text);
+		//$chincheck = preg_match('/[\x{4e00}-\x{9fa5}]+/u', $text);
 		/*if($chincheck === false) {
 			return @iconv('GB2312', 'UTF-8', $text); //chinese
 		}*/
 		//return @iconv('WINDOWS-1250', 'UTF-8', $text); //middle/eastern europe
-    return @iconv('WINDOWS-1251', 'UTF-8', $text); //russian
-    //return @iconv('ISO-8859-2', 'UTF-8', $text); //middle/eastern europe
+		return @iconv('WINDOWS-1251', 'UTF-8', $text); //russian
+		//return @iconv('ISO-8859-2', 'UTF-8', $text); //middle/eastern europe
 		//return strtr($text, $this->map);  //more or less russian
 		//return $text;
 	}
-	
+
 }
 
 
@@ -220,18 +220,18 @@ class TimeMeasure {
 	private $prev = 0;
 	private $now;
 	private $times = array();
-	
+
 	public function __construct () {
 		$this->start = tmc();
 		$this->times[] = array('start', $this->start);
 	}
-	
+
 	public function Measure($desc = ''){
 		$this->prev = $this->prev == 0 ? $this->start : $this->now;
 		$this->now = tmc();
 		$this->times[] = array($desc, $this->now);
 	}
-	
+
 	public function ShowTime($print = 1, $pos = -1, $text = '') {
 		if($pos == -1) {
 			$echo = sprintf('%3.3f', ($this->now - $this->start)).' s'.ENVE;
@@ -257,7 +257,7 @@ class TimeMeasure {
 		}
 		echo '</table>';
 	}
-	
+
 }
 
 function sanity_string($string) {

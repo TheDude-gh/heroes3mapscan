@@ -2,6 +2,7 @@ Heroes III Map Reader
 ======
 
 Author: The Dude from novapolis.net
+
 Licence: GNU GENERAL PUBLIC LICENSE Version 3
 
 

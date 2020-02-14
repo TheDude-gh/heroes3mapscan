@@ -12,7 +12,7 @@ require_once 'fun/config.php';
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8;" />
 	<script type="application/javascript" src="js/jquery-2.1.3.min.js"></script>
 	<script type="application/javascript" src="js/jquery-ui.js"></script>
-  <script type="application/javascript" src="js/mapread.js"></script>
+	<script type="application/javascript" src="js/mapread.js"></script>
 <style>
 	* {background: #ddc; font-family: calibri, arial, sans-serif; }
 	table {border-collapse:collapse; margin: 1em; border: solid 1px #000;}
@@ -56,8 +56,8 @@ $disp = '';
 
 if($mapid) {
 	if(exget('del')) {
-	  $sql = "DELETE FROM heroes3_maps WHERE idm = $mapid";
-	  mq($sql);
+		$sql = "DELETE FROM heroes3_maps WHERE idm = $mapid";
+		mq($sql);
 	}
 	else {
 		$sql = "SELECT m.mapfile FROM heroes3_maps AS m WHERE m.idm = $mapid";
@@ -82,7 +82,7 @@ else {
 		$sql = "SELECT m.mapfile, m.idm FROM heroes3_maps AS m";
 		$query = mq($sql);
 		while($res = mfa($query)) {
-	  	$mapdbs[$res['idm']] = $res['mapfile'];
+			$mapdbs[$res['idm']] = $res['mapfile'];
 		}
 
 		foreach($files as $k => $mfile) {
@@ -123,7 +123,7 @@ if($mapfiledb) {
 	$mapok = true;
 }
 elseif($mapcode) {
-  $mapok = true;
+	$mapok = true;
 	$mapfile = MAPDIR.base64_decode($mapcode);
 }
 
@@ -136,7 +136,7 @@ if($mapok) {
 	$map->PrintStateSet(true, $buildmap);
 	$map->SetSaveMap(1);
 	$map->ReadMap();
-	
+
 	$tm->Measure('End');
 	$tm->showTimes();
 }

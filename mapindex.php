@@ -37,7 +37,7 @@ $mapsearch = expost('map', exget('map', ''));
 
 <form method="post" action="mapindex.php">
 	<input type="text" name="map" value="<?php echo $mapsearch; ?>" />
-  <input type="submit" name="ok" value="Search" />
+	<input type="submit" name="ok" value="Search" />
 </form>
 <?php
 
@@ -111,11 +111,11 @@ else {
 		$imgu = $res['levels'] ? '<img src="'.MAPDIRIMG.$res['mapimage'].'_u.png" alt="ground" title="underground" />' : '';
 
 		$name = $res['mapname'] != '' ? $res['mapname'] : $res['mapfile'];
-		
+
 		$levels = $res['levels'] ? 2 : 1;
 
 		$victory = array_key_exists($res['victory'], $VICTORY) ? $VICTORY[$res['victory']] : '?';
-    $loss = array_key_exists($res['loss'], $LOSS) ? $LOSS[$res['loss']] : '?';
+		$loss = array_key_exists($res['loss'], $LOSS) ? $LOSS[$res['loss']] : '?';
 
 		echo $maphead.'<tr>
 			<td><a href="mapscan.php?mapid='.$res['idm'].'">'.$name.'</a></td>
@@ -129,13 +129,13 @@ else {
 			<td>'.$loss.'</td>
 		</tr>
 		<tr>
-		  <td></td>
-		  <td colspan="8">'.nl2br($res['mapdesc']).'</td>
+			<td></td>
+			<td colspan="8">'.nl2br($res['mapdesc']).'</td>
 		</tr>
 		<tr>
-		  <td></td>
-		  <td colspan="4" class="ac">'.$imgg.'</td>
-		  <td colspan="4" class="ac">'.$imgu.'</td>
+			<td></td>
+			<td colspan="4" class="ac">'.$imgg.'</td>
+			<td colspan="4" class="ac">'.$imgu.'</td>
 		</tr>';
 	}
 
@@ -154,12 +154,12 @@ function MapStats() {
 		WHEN 'SoD' THEN  2
 		WHEN 'WOG' THEN  3
 		END";
-		
+
 	$sqls[] = "SELECT m.size, m.sizename, COUNT(m.idm) AS count
 		FROM heroes3_maps AS m
 		GROUP BY m.size
 		ORDER BY m.size";
-		
+
 	$sqls[] = "SELECT m.diff, COUNT(m.idm) AS count
 		FROM heroes3_maps AS m
 		GROUP BY m.diff
@@ -180,12 +180,12 @@ function MapStats() {
 		FROM heroes3_maps AS m
 		GROUP BY m.victory
 		ORDER BY m.victory";
-		
+
 	$sqls[] = "SELECT m.loss, COUNT(m.idm) AS count
 		FROM heroes3_maps AS m
 		GROUP BY m.loss
 		ORDER BY m.loss";
-		
+
 	$sqls[] = "SELECT m.victory, m.loss, COUNT(m.idm) AS count
 		FROM heroes3_maps AS m
 		GROUP BY m.victory, m.loss
@@ -203,8 +203,8 @@ function MakeTableFromSQL($sql) {
 	$namecol = array();
 	$query = mq($sql);
 	while($res = mfa($query)) {
-	  if($n == 0) {
-	    echo '<tr>';
+		if($n == 0) {
+			echo '<tr>';
 			foreach($res as $key => $field) {
 				if(is_int($key)) continue;
 				$namecol[] = $key;
@@ -214,10 +214,10 @@ function MakeTableFromSQL($sql) {
 			echo '</tr>';
 		}
 		$n++;
-		
+
 		echo '<tr>';
 		for($i = 0; $i < $ncol; $i++) {
-		  if($namecol[$i] == 'victory') {
+			if($namecol[$i] == 'victory') {
 				global $VICTORY;
 				$value = $VICTORY[$res[$i]];
 			}
@@ -228,12 +228,12 @@ function MakeTableFromSQL($sql) {
 			else {
 				$value = $res[$i];
 			}
-			
+
 			if($namecol[$i] != 'count') {
-			  $value = '<a href="?q='.$namecol[$i].'&amp;v='.$res[$i].'">'.$value.'</a>';
+				$value = '<a href="?q='.$namecol[$i].'&amp;v='.$res[$i].'">'.$value.'</a>';
 			}
-			
-		  $cl = $namecol[$i] == 'count' ? ' class="ar"' : '';
+
+			$cl = $namecol[$i] == 'count' ? ' class="ar"' : '';
 			echo '<td'.$cl.'>'.$value.'</td>';
 		}
 		echo '</tr>';

@@ -23,7 +23,7 @@
 		const NONE = 0xff;
 	}
 
- $VICTORY = [
+	$VICTORY = [
 		VICTORY::NONE => 'Standard',
 		VICTORY::ARTIFACT => 'Acquire a specific artifact',
 		VICTORY::ACCCREATURES => 'Accumulate creatures',
@@ -47,5 +47,5 @@
 		LOSS::TIME => 'Time expires',
 	];
 
-	
+
 ?>

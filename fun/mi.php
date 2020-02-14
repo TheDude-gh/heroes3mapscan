@@ -15,7 +15,7 @@
 		}
 		$db_link = false;
 	}
-	
+
 	function file_write($soubor,$data){
 		if(!$file = FOpen($soubor, 'w')) return false;
 		elseif(!FWrite($file, $data)) return false;
@@ -41,11 +41,11 @@
 	function excookie($name, $def = null){
 		return isSet($_COOKIE[$name]) ? $_COOKIE[$name] : $def;
 	}
-	
+
 	function SetDef($var, $def = null){
 		if(!$var) $var = $def;
 	}
-	
+
 	function use_cache($cache_file, $cache_period){
 		if(isSet($_GET['rc'])) return false;
 		if(file_exists($cache_file) && (time() < filemtime($cache_file) + $cache_period)) return true; //use cache
@@ -61,7 +61,7 @@
 	function mfa($query){
 		return mysqli_fetch_array($query, MYSQLI_BOTH);
 	}
-	
+
 	function mfr($query){
 		return mysqli_fetch_array($query, MYSQLI_NUM);
 	}
@@ -88,7 +88,7 @@
 	function mar(){
 		return mysqli_affected_rows(db_link());
 	}
-	
+
 	function mii(){
 		return mysqli_insert_id(db_link());
 	}
@@ -113,18 +113,18 @@
 		file_append($fmlog, $time.' '.$_SERVER['REQUEST_URI'].EOL.$dbl.EOL.$sql.EOL.$me.EOL.EOL);
 		//vd(error_get_last());
 	}
-	
+
 	function sqlog($sql){
 		static $count = 0;
 		if($count == 0) file_write('sqlog.sql', '');
 		$count++;
 		file_append('sqlog.sql', $count."\n".$sql."\n\n");
 	}
-	
+
 	function comma($value, $round = 0){
 		return number_format($value, $round, '.', ',');
 	}
-	
+
 	function padleft($value){
 		return str_pad($value, 2, 0, STR_PAD_LEFT);
 	}

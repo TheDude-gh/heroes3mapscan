@@ -5,7 +5,7 @@
 	const OWNNOONE = 0xff;
 	const OBJECT_INVALID = -1; //invalid object id
 	const COOR_INVALID = -1; //invalid coordinates
-	
+
 	const MAXINT32 = 0x80000000; //1 << 31;
 	const MININT32 = 0x100000000; //1 << 32; //without minus
 
@@ -89,7 +89,7 @@
 		const BLOCKED   = 4; //tile with inaccessible object
 		const COMBINED  = 6; //tile with any object, VISITABLE | BLOCKED
 	}
-	
+
 	class VICTORY {
 		const ARTIFACT = 0;
 		const ACCCREATURES = 1;
@@ -106,7 +106,7 @@
 		const SURVIVETIME = 12;
 		const NONE = 0xff;
 	}
-	
+
 	class LOSS {
 		const TOWN = 0;
 		const HERO = 1;
@@ -252,20 +252,20 @@
 		const MAGIC_PLAINS2 = 230;
 		const ROCKLANDS = 231;
 	}
-	
+
 	//quests
 	class REWARDTYPE {
-		 const NOTHING = 0;
-		 const EXPERIENCE = 1;
-		 const MANA_POINTS = 2;
-		 const MORALE_BONUS = 3;
-		 const LUCK_BONUS = 4;
-		 const RESOURCES = 5;
-		 const PRIMARY_SKILL = 6;
-		 const SECONDARY_SKILL = 7;
-		 const ARTIFACT = 8;
-		 const SPELL = 9;
-		 const CREATURE = 10;
+		const NOTHING = 0;
+		const EXPERIENCE = 1;
+		const MANA_POINTS = 2;
+		const MORALE_BONUS = 3;
+		const LUCK_BONUS = 4;
+		const RESOURCES = 5;
+		const PRIMARY_SKILL = 6;
+		const SECONDARY_SKILL = 7;
+		const ARTIFACT = 8;
+		const SPELL = 9;
+		const CREATURE = 10;
 	}
 
 	class QUESTMISSION {
@@ -284,8 +284,8 @@
 		const HOTA_CLASS = 0;
 		const HOTA_NOTBEFORE = 1;
 	};
-	
-	
+
+
 	//constants class with items names
 	class HeroesConstants {
 
@@ -760,7 +760,7 @@
 			1012 => 'Random lvl 7',
 			1013 => 'Random lvl 7 Upg',
 		];
-		
+
 		//HOTA
 		public $MonsterHota = [
 			151 => 'Sea Dog',
@@ -829,8 +829,8 @@
 			40 => '<blank>',
 			41 => 'Library of Enlightenment',
 			42 => 'Lighthouse',
-			43 => 'Monolith One Way Entrance', 
-			44 => 'Monolith One Way Exit', 
+			43 => 'Monolith One Way Entrance',
+			44 => 'Monolith One Way Exit',
 			45 => 'Monolith Two Way',
 			46 => 'Magic Plains',
 			47 => 'School of Magic',
@@ -991,7 +991,7 @@
 			209 => 'Rough Hills',
 			210 => 'Subterranean Rocks',
 			211 => 'Swamp Foliage',
-			212 => 'Border Gate', 
+			212 => 'Border Gate',
 			213 => 'Freelancer\'s Guild',
 			214 => 'Hero Placeholder',
 			215 => 'Quest Guard',
@@ -1208,7 +1208,7 @@
 			169 => 'Blank Boots ****',
 			170 => 'Blank Horn ****',
 		];
-		
+
 		public $HeroClass = [
 			0 => 'Knight',
 			1 => 'Cleric',
@@ -1413,7 +1413,7 @@
 			153 => 'Mutare Drake',
 			154 => 'Boragus',
 			155 => 'Xeron',
-			
+
 			//HOTA
 			156 => 'Corkes',
 			157 => 'Jeremy',
@@ -1437,17 +1437,17 @@
 			175 => 'Beatrice',
 			176 => 'Kinkeria',
 			177 => 'Ranloo',
-			
+
 			255 => 'Random',
 		];
-		
+
 		public $BlockMapBits = [
 			BLOCKMAPBITS::VISIBLE   => 'Visible', //1
 			BLOCKMAPBITS::VISITABLE => 'Visitable', //2
 			BLOCKMAPBITS::BLOCKED   => 'Blocked',  //4
 			BLOCKMAPBITS::COMBINED  => 'Combined', //6
 		];
-	
+
 		public $RewardType = [
 			REWARDTYPE::NOTHING => 'Nothing',
 			REWARDTYPE::EXPERIENCE => 'Experience',
@@ -1475,7 +1475,7 @@
 			QUESTMISSION::PLAYER => 'Player',
 			QUESTMISSION::KEYMASTER => 'Keymaster',
 		];
-		
+
 		public $Victory = [
 			VICTORY::NONE => 'Standard',
 			VICTORY::ARTIFACT => 'Acquire a specific artifact',
@@ -1492,7 +1492,7 @@
 			VICTORY::ELIMINATEMONSTERS => 'Eliminate all monsters',
 			VICTORY::SURVIVETIME => 'Survive for certain time',
 		];
-	
+
 		public $Loss = [
 			LOSS::NONE => 'None',
 			LOSS::TOWN => 'Lose a specific town',
@@ -1506,5 +1506,5 @@
 
 
 
-	
+
 ?>
