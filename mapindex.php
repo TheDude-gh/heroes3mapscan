@@ -1,10 +1,10 @@
 <?php
 
-require_once 'fun/config.php';
 require_once 'fun/mi.php';
-
+require_once 'fun/config.php';
 require_once 'fun/mapindexconst.php';
 
+$mapsearch = expost('map', exget('map', ''));
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="cz" xml:lang="cz">
@@ -19,7 +19,8 @@ require_once 'fun/mapindexconst.php';
 	.ar { text-align:right; }
 	.ac { text-align:center; }
 	.al { text-align:left; }
-	
+	.mc { margin: 0px auto; }
+
 	a, a:visited { color: #00f; text-decoration: none; }
 	a:hover { text-decoration: underline; }
 
@@ -33,6 +34,11 @@ require_once 'fun/mapindexconst.php';
 	<a href="?c=list">Map List</a><br />
 	<a href="?c=stat">Map Stat</a>
 </p>
+
+<form method="post" action="mapindex.php">
+	<input type="text" name="map" value="<?php echo $mapsearch; ?>" />
+  <input type="submit" name="ok" value="Search" />
+</form>
 <?php
 
 $cmd = exget('c', 'list');
@@ -42,17 +48,42 @@ $qval = exget('v', '');
 if($cmd == 'stat') {
 	MapStats();
 }
-elseif($qcol) {
+else {
 	$where = '';
-	
+	$llink = '';
+
 	if($qcol != '' && $qval != ''){
-  	$qcol = mes($qcol);
-    $qval = mes($qval);
+		$qcol = mes($qcol);
+		$qval = mes($qval);
 		$where = "WHERE $qcol='$qval'";
+		$llink = 'q='.$qcol.'&amp;v='.$qval;
+	}
+	elseif($mapsearch) {
+		$mapsearch = mes($mapsearch);
+		$where = "WHERE m.mapname LIKE '%$mapsearch%'";
+		$llink = 'map='.$mapsearch;
 	}
 
 	global $VICTORY;
 	global $LOSS;
+
+
+	$limit = 20; //maps per page
+	$start = intval(exget('start', 0));
+	$offset = $start * $limit;
+
+	$sqlt = "SELECT COUNT(m.idm) AS mc
+		FROM heroes3_maps AS m
+		$where";
+	$total = mgr($sqlt);
+
+	echo 'Found: '.$total.'<br /><br />';
+
+	$links = more_links($limit, $start, $total, $llink);
+
+	echo $links;
+
+
 
 	echo '<table class="smalltable1">';
 
@@ -70,14 +101,14 @@ elseif($qcol) {
 
 	$sql = "SELECT m.idm, m.mapfile, m.mapname, m.mapdesc, m.version, m.size, m.sizename, m.levels, m.diff,
 			m.playersnum, m.playhuman, m.teamnum, m.victory, m.loss, m.filechanged, m.mapimage
-		FROM heroes_maps AS m $where
-		ORDER BY m.mapname ASC";
+		FROM heroes3_maps AS m $where
+		ORDER BY m.mapname ASC
+		LIMIT $offset, $limit";
 	$query = mq($sql);
-	echo 'Found: '.mar();
 	while($res = mfa($query)) {
 
-		$imgg = '<img src="'.MAPDIRIMG.'/'.$res['mapimage'].'_g.png" alt="ground" title="ground" />';
-		$imgu = $res['levels'] ? '<img src="'.MAPDIRIMG.'/'.$res['mapimage'].'_u.png" alt="ground" title="underground" />' : '';
+		$imgg = '<img src="'.MAPDIRIMG.$res['mapimage'].'_g.png" alt="ground" title="ground" />';
+		$imgu = $res['levels'] ? '<img src="'.MAPDIRIMG.$res['mapimage'].'_u.png" alt="ground" title="underground" />' : '';
 
 		$name = $res['mapname'] != '' ? $res['mapname'] : $res['mapfile'];
 		
@@ -109,11 +140,13 @@ elseif($qcol) {
 	}
 
 	echo '</table>';
+
+	echo $links.'<br /><br />';
 }
 
 function MapStats() {
 	$sqls[] = "SELECT m.version, COUNT(m.idm) AS count
-		FROM heroes_maps AS m
+		FROM heroes3_maps AS m
 		GROUP BY m.version
 		ORDER BY CASE m.version
 		WHEN 'RoE' THEN  0
@@ -123,12 +156,12 @@ function MapStats() {
 		END";
 		
 	$sqls[] = "SELECT m.size, m.sizename, COUNT(m.idm) AS count
-		FROM heroes_maps AS m
+		FROM heroes3_maps AS m
 		GROUP BY m.size
 		ORDER BY m.size";
 		
 	$sqls[] = "SELECT m.diff, COUNT(m.idm) AS count
-		FROM heroes_maps AS m
+		FROM heroes3_maps AS m
 		GROUP BY m.diff
 		ORDER BY CASE m.diff
 		WHEN 'Easy' THEN  0
@@ -139,22 +172,22 @@ function MapStats() {
 		END";
 
 	$sqls[] = "SELECT m.playersnum, COUNT(m.idm) AS count
-		FROM heroes_maps AS m
+		FROM heroes3_maps AS m
 		GROUP BY m.playersnum
 		ORDER BY m.playersnum";
 
 	$sqls[] = "SELECT m.victory, COUNT(m.idm) AS count
-		FROM heroes_maps AS m
+		FROM heroes3_maps AS m
 		GROUP BY m.victory
 		ORDER BY m.victory";
 		
 	$sqls[] = "SELECT m.loss, COUNT(m.idm) AS count
-		FROM heroes_maps AS m
+		FROM heroes3_maps AS m
 		GROUP BY m.loss
 		ORDER BY m.loss";
 		
 	$sqls[] = "SELECT m.victory, m.loss, COUNT(m.idm) AS count
-		FROM heroes_maps AS m
+		FROM heroes3_maps AS m
 		GROUP BY m.victory, m.loss
 		ORDER BY m.victory";
 
@@ -208,6 +241,27 @@ function MakeTableFromSQL($sql) {
 	echo '<table>';
 }
 
+function more_links($div, $start, $total, $llink) {
+	$out = '<p class="mc ac">';
+	$posts = ceil($total / $div);
+	for($i = $posts; $i > 0; $i--){
+		$link = $posts - $i + 1;
+		if($start == $link - 1) {
+			$out .= '<span>'.$link.'</span>';
+		}
+		else {
+			$out .= '<a href="?'.$llink.'&amp;start='.($link - 1).'">'.$link.'</a>';
+		}
+		if($i > 1) {
+			$out .= ' | ';
+		}
+	}
+	return $out.'</p>';
+}
+
+function Mapsort($a, $b){
+	return strnatcasecmp($a['mapname'], $b['mapname']);
+}
 
 ?>
 </body>

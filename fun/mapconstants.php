@@ -1,50 +1,93 @@
 <?php
-	const ALL_PLAYERS = 255; //bitfield
+
+	//global constants
 	const OWNERNONE = 0xfe;
 	const OWNNOONE = 0xff;
 	const OBJECT_INVALID = -1; //invalid object id
-	const TILE_SPECIAL = 0x7ff; //just random number to mark special tile property
 	const COOR_INVALID = -1; //invalid coordinates
 	
-	const MAXINT32 = 1 << 31;
-	const MININT32 = 1 << 32; //without minus
+	const MAXINT32 = 0x80000000; //1 << 31;
+	const MININT32 = 0x100000000; //1 << 32; //without minus
 
+	const PRIMARY_SKILLS = 4;
+	const SPELL_BYTE = 9;
+	const SECSKILL_BYTE = 4;
+	const RESOURCE_QUANTITY = 8;
+	const HEROES_PER_TYPE = 8; //amount of heroes of each type
+
+	const TILEBYTESIZE = 7;
+
+	const HEROES_QUANTITY = 156; //156 ? ROE,AB,SOD,WOG
+	const HEROES_QUANTITY_HOTA = 178; //HOTA
+	const SPELLS_QUANTITY = 70; //69 visible in editor
+
+	const PLAYERSNUM = 8;
+	const HNULL = 0;
+	const HNONE = 0xff; //general heroes NONE value
+	const HNONETOWN = 0x1ff;
+	const HOTAMONSTERIDS = 151;
+	const HNONE16 = 0xffff; //general heroes NONE value, 16 bit
+	const HNONE32 = 0xffffffff; //general heroes NONE value, 32 bit
+
+	//some unused constants
+	/*
 	const BACKPACK_START = 19;
 	const CREATURES_PER_TOWN = 7; //without upgrades
 	const SPELL_LEVELS = 5;
 	const SPELL_SCHOOL_LEVELS = 4;
-
 	const ARMY_SIZE = 7;
 	const SKILL_PER_HERO = 8;
-
 	const SKILL_QUANTITY = 28;
-	const PRIMARY_SKILLS = 4;
-	const SPELL_BYTE = 9;
-	const SECSKILL_BYTE = 4;
 	const TERRAIN_TYPES = 10;
-	const RESOURCE_QUANTITY = 8;
-	const HEROES_PER_TYPE = 8; //amount of heroes of each type
-
-	// amounts of OH3 objects. Can be changed by mods, should be used only during H3 loading phase
 	const F_NUMBER = 9;
 	const ARTIFACTS_QUANTITY = 171;
-	const HEROES_QUANTITY = 156; //156 ? ROE,AB,SOD,WOG
-	const HEROES_QUANTITY_HOTA = 178; //HOTA
-	const SPELLS_QUANTITY = 70; //69 visible in editor
 	const CREATURES_COUNT = 197;
+	*/
 
-	const PLAYERSNUM = 8;
-	const HNULL = 0;
-	const HNONE = 0xff;
-	const HNONETOWN = 0x1ff;
-	const HOTAMONSTERIDS = 151;
-	
-
+	//constants classes
 	class MAPOBJECTS {
 		const NONE = 0;
 		const HERO = 1;
 		const TOWN = 2;
 		const MONSTER = 3;
+	}
+
+	class MAPSPECIAL {
+		const NONE	   = 0;
+		const MINE     = 1;
+		const ARTIFACT = 2;
+		const MONSTER  = 3;
+		const ANY      = 4;
+	}
+
+	class TILETYPE {
+		const FREE     = 0;
+		const POSSIBLE = 1;
+		const BLOCKED  = 2;
+		const USED     = 3;
+		const ACCESSIBLE = 2;
+	}
+
+	class TERRAIN {
+		const DIRT      = 0;
+		const SAND      = 1;
+		const GRASS     = 2;
+		const SNOW      = 3;
+		const SWAMP     = 4;
+		const ROUGH     = 5;
+		const SUBTERAIN = 6;
+		const LAVA      = 7;
+		const WATER     = 8;
+		const ROCK      = 9;
+		const HIGHLANDS = 10;
+		const WASTELAND = 11;
+	}
+
+	class BLOCKMAPBITS {
+		const VISIBLE   = 1; //free tile
+		const VISITABLE = 2; //tile with object, that can be stepped on
+		const BLOCKED   = 4; //tile with inaccessible object
+		const COMBINED  = 6; //tile with any object, VISITABLE | BLOCKED
 	}
 	
 	class VICTORY {
@@ -243,6 +286,7 @@
 	};
 	
 	
+	//constants class with items names
 	class HeroesConstants {
 
 		public $PlayersColours = [
@@ -254,6 +298,7 @@
 			5 => 'Purple',
 			6 => 'Teal',
 			7 => 'Pink',
+			0xff => 'Neutral'
 		];
 
 		public $PrimarySkill = [
@@ -265,7 +310,6 @@
 		];
 
 		public $SecondarySkill = [
-			-2 => 'Wrong',
 			-1 => 'Default',
 			0 => 'Pathfinding',
 			1 => 'Archery',
@@ -295,7 +339,6 @@
 			25 => 'Sorcery',
 			26 => 'Resistance',
 			27 => 'First Aid',
-			//28 => 'skill Size',
 		];
 
 		public $Alignment = [
@@ -320,113 +363,98 @@
 
 		public $AiTactic = [
 			-1 => 'NONE',
-			0 => 'RANDOM,',
-			1 => 'WARRIOR,',
-			2 => 'BUILDER,',
+			0 => 'RANDOM',
+			1 => 'WARRIOR',
+			2 => 'BUILDER',
 			3 => 'EXPLORER',
-		];
-
-		public $BuildingState =	[
-			0 => 'HAVE CAPITAL,',
-			1 => 'NO WATER,',
-			2 => 'FORBIDDEN,',
-			3 => 'ADD MAGES GUILD,',
-			4 => 'ALREADY PRESENT,',
-			5 => 'CANT BUILD TODAY,',
-			6 => 'NO RESOURCES,',
-			7 => 'ALLOWED,',
-			8 => 'PREREQUIRES,',
-			9 => 'MISSING BASE,',
-			10 => 'BUILDING ERROR,',
-			11 => 'TOWN NOT OWNED',
 		];
 
 
 		public $TileType = [
-			0 => 'FREE,',
-			1 => 'POSSIBLE,',
-			2 => 'BLOCKED,',
-			3 => 'USED',
+			TILETYPE::FREE     => 'Free',
+			TILETYPE::POSSIBLE => 'Possible',
+			TILETYPE::BLOCKED  => 'Blocked',
+			TILETYPE::USED     => 'Used',
 		];
 
+		//unused, but maybe in future
+		/*
 		public $TeleportChannelType = [
-			0 => 'IMPASSABLE,',
-			1 => 'BIDIRECTIONAL,',
-			2 => 'UNIDIRECTIONAL,',
+			0 => 'IMPASSABLE',
+			1 => 'BIDIRECTIONAL',
+			2 => 'UNIDIRECTIONAL',
 			3 => 'MIXED',
 		];
 
 		public $RiverType = [
-			0 => 'NO RIVER,',
-			1 => 'CLEAR RIVER,',
-			2 => 'ICY RIVER,',
-			3 => 'MUDDY RIVER,',
+			0 => 'NO RIVER',
+			1 => 'CLEAR RIVER',
+			2 => 'ICY RIVER',
+			3 => 'MUDDY RIVER',
 			4 => 'LAVA RIVER',
 		];
 
 		public $RoadType = [
-			0 => 'NO ROAD,',
-			1 => 'DIRT ROAD,',
-			2 => 'GRAVEL ROAD,',
+			0 => 'NO ROAD',
+			1 => 'DIRT ROAD',
+			2 => 'GRAVEL ROAD',
 			3 => 'COBBLESTONE ROAD',
 		];
+
+		public $SpellSchool = [
+			0 => 'AIR',
+			1 => 'FIRE',
+			2 => 'WATER',
+			3 => 'EARTH'
+		];
+		*/
 
 		public $SecSkillLevel = [
 			0 => 'None',
 			1 => 'Basic',
 			2 => 'Advanced',
 			3 => 'Expert',
-			//4 => 'levels size',
 		];
 
 		public $TerrainType = [
-			-2 => 'WRONG',
-			-1 => 'BORDER',
-			0 => 'DIRT,',
-			1 => 'SAND,',
-			2 => 'GRASS,',
-			3 => 'SNOW,',
-			4 => 'SWAMP,',
-			5 => 'ROUGH,',
-			6 => 'SUBTERRANEAN,',
-			7 => 'LAVA,',
-			8 => 'WATER,',
-			9 => 'ROCK',
+			0 => 'Dirt',
+			1 => 'Sand',
+			2 => 'Grass',
+			3 => 'Snow',
+			4 => 'Swamp',
+			5 => 'Rough',
+			6 => 'Subterranean',
+			7 => 'Lava',
+			8 => 'Water',
+			9 => 'Rock',
+			10 => 'Highlands',
+			11 => 'Wasteland'
 		];
 
 
 		public $ArtifactPosition = [
 			-2 => 'First available',
 			-1 => 'Pre first', //sometimes used as error, sometimes as first free in backpack
-			0 => 'Head,',
-			1 => 'Shoulders,',
-			2 => 'Neck,',
-			3 => 'Right hand,',
-			4 => 'Left hand,',
+			0 => 'Head',
+			1 => 'Shoulders',
+			2 => 'Neck',
+			3 => 'Right hand',
+			4 => 'Left hand',
 			5 => 'Torso',
-			6 => 'Right ring,',
-			7 => 'Left ring,',
+			6 => 'Right ring',
+			7 => 'Left ring',
 			8 => 'Feet',
-			9 => 'Misc1,',
-			10 => 'Misc2,',
-			11 => 'Misc3,',
+			9 => 'Misc1',
+			10 => 'Misc2',
+			11 => 'Misc3',
 			12 => 'Misc4',
-			13 => 'Mach1,',
-			14 => 'Mach2,',
-			15 => 'Mach3,',
+			13 => 'Mach1',
+			14 => 'Mach2',
+			15 => 'Mach3',
 			16 => 'Mach4',
-			17 => 'Spellbook,',
+			17 => 'Spellbook',
 			18 => 'Misc5',
-			19 => 'Backbpack', //to have it too
-			//cres
-			/*0 => 'CREATURE SLOT',
-			0 => 'COMMANDER1',
-			1 => 'COMMANDER2,',
-			2 => 'COMMANDER3,',
-			3 => 'COMMANDER4,',
-			4 => 'COMMANDER5,',
-			5 => 'COMMANDER6,',
-			6 => 'COMMANDER AFTER LAST',*/
+			19 => 'Backpack',
 		];
 
 		public $SpellID = [
@@ -515,14 +543,6 @@
 			80 => 'Acid Breath Defense',
 			81 => 'Acid Breath Damage',
 			82 => 'After Last',
-		];
-
-
-		public $SpellSchool = [
-			0 => 'AIR',
-			1 => 'FIRE',
-			2 => 'WATER',
-			3 => 'EARTH'
 		];
 
 		//full defines of obj, monsters, heroes
@@ -725,6 +745,20 @@
 			194 => 'Werewolf',
 			195 => 'Hell Steed',
 			196 => 'Dracolich',
+			1000 => 'Random lvl 1',
+			1001 => 'Random lvl 1 Upg',
+			1002 => 'Random lvl 2',
+			1003 => 'Random lvl 2 Upg',
+			1004 => 'Random lvl 3',
+			1005 => 'Random lvl 3 Upg',
+			1006 => 'Random lvl 4',
+			1007 => 'Random lvl 4 Upg',
+			1008 => 'Random lvl 5',
+			1009 => 'Random lvl 5 Upg',
+			1010 => 'Random lvl 6',
+			1011 => 'Random lvl 6 Upg',
+			1012 => 'Random lvl 7',
+			1013 => 'Random lvl 7 Upg',
 		];
 		
 		//HOTA
@@ -748,6 +782,7 @@
 			168 => 'Satyr',
 			169 => 'Steel Golem',
 			170 => 'Fangarm',
+			255 => 'Random',
 		];
 
 		public $Objects = [
@@ -756,22 +791,22 @@
 			2 => 'Altar of Sacrifice',
 			3 => 'Anchor Point',
 			4 => 'Arena',
-			5 => 'Artifact', // [0-143 - Format A1]
+			5 => 'Artifact',
 			6 => 'Pandora\'s Box',
 			7 => 'Black Market',
 			8 => 'Boat',
-			9 => 'Borderguard', // [0-7 - Format BG]
-			10 => 'Keymaster\'s Tent', //[0-	7 => '- Format BG]',
+			9 => 'Borderguard',
+			10 => 'Keymaster\'s Tent',
 			11 => 'Buoy',
 			12 => 'Campfire',
 			13 => 'Cartographer',
 			14 => 'Swan Pond',
 			15 => 'Cover of Darkness',
-			16 => 'Creature Bank', //[0-	20 => '- Format CB]',
-			17 => 'Creature Generator 1', //[0-	95 => '- Format CG]',
+			16 => 'Creature Bank',
+			17 => 'Creature Generator 1',
 			18 => 'Creature Generator 2',
 			19 => 'Creature Generator 3',
-			20 => 'Creature Generator 4', //[0-	1 => '- Format CG]',
+			20 => 'Creature Generator 4',
 			21 => 'Cursed Ground',
 			22 => 'Corpse',
 			23 => 'Marletto Tower',
@@ -784,8 +819,8 @@
 			30 => 'Fountain of Fortune',
 			31 => 'Fountain of Youth',
 			32 => 'Garden of Revelation',
-			33 => 'Garrison', //[	0 => '= ordinary, 1 = antimagic]',
-			34 => 'Hero [0-155 - Format H]',
+			33 => 'Garrison',
+			34 => 'Hero',
 			35 => 'Hill Fort',
 			36 => 'Grail',
 			37 => 'Hut of the Magi',
@@ -794,9 +829,9 @@
 			40 => '<blank>',
 			41 => 'Library of Enlightenment',
 			42 => 'Lighthouse',
-			43 => 'Monolith One Way Entrance', //[	0 => '- 7 - Format M1 ]',
-			44 => 'Monolith One Way Exit', //[	0 => '- 7 - Format M1 ]',
-			45 => 'Monolith Two Way', //[	0 => '- 7 - Format M2 ]',
+			43 => 'Monolith One Way Entrance', 
+			44 => 'Monolith One Way Exit', 
+			45 => 'Monolith Two Way',
 			46 => 'Magic Plains',
 			47 => 'School of Magic',
 			48 => 'Magic Spring',
@@ -804,8 +839,8 @@
 			50 => '<blank>',
 			51 => 'Mercenary Camp',
 			52 => 'Mermaid',
-			53 => 'Mine', // [0 - 7 - Format MI ]
-			54 => 'Monster', // [0 - 196 - Format C]
+			53 => 'Mine',
+			54 => 'Monster',
 			55 => 'Mystical Garden',
 			56 => 'Oasis',
 			57 => 'Obelisk',
@@ -814,7 +849,7 @@
 			60 => 'Pillar of Fire',
 			61 => 'Star Axis',
 			62 => 'Prison',
-			63 => 'Pyramid', //[	0 => '- 74 - Castle Editor Objects]',
+			63 => 'Pyramid',
 			64 => 'Rally Flag',
 			65 => 'Random Artifact',
 			66 => 'Random Treasure Artifact',
@@ -830,7 +865,7 @@
 			76 => 'Random Resource',
 			77 => 'Random Town',
 			78 => 'Refugee Camp',
-			79 => 'Resource', // [0 - 7 - Format R]
+			79 => 'Resource',
 			80 => 'Sanctuary',
 			81 => 'Scholar',
 			82 => 'Sea Chest',
@@ -844,15 +879,15 @@
 			90 => 'Shrine of Magic Thought',
 			91 => 'Sign',
 			92 => 'Sirens',
-			93 => 'Spell Scroll', // [0 - 69 - Format SP]
+			93 => 'Spell Scroll',
 			94 => 'Stables',
 			95 => 'Tavern',
 			96 => 'Temple',
 			97 => 'Den of Thieves',
-			98 => 'Town', // [0 - 8 -Format T]
+			98 => 'Town',
 			99 => 'Trading Post',
 			100 => 'Learning Stone',
-			101 => 'Treasure Chest', // [UN:B]
+			101 => 'Treasure Chest',
 			102 => 'Tree of Knowledge',
 			103 => 'Subterranean Gate',
 			104 => 'University',
@@ -864,7 +899,7 @@
 			110 => 'Watering Hole',
 			111 => 'Whirlpool',
 			112 => 'Windmill',
-			113 => 'Witch Hut', // [0 - 27 - Format SS]
+			113 => 'Witch Hut',
 			114 => 'Brush',
 			115 => 'Bush',
 			116 => 'Cactus',
@@ -956,7 +991,7 @@
 			209 => 'Rough Hills',
 			210 => 'Subterranean Rocks',
 			211 => 'Swamp Foliage',
-			212 => 'Border Gate', // [0-7 - Format BG]
+			212 => 'Border Gate', 
 			213 => 'Freelancer\'s Guild',
 			214 => 'Hero Placeholder',
 			215 => 'Quest Guard',
@@ -964,7 +999,7 @@
 			217 => 'Random dwelling with no home castle type',
 			218 => 'Random dwelling with home castle type',
 			219 => 'Garrison',
-			220 => 'Mine',
+			220 => 'Abandoned Mine',
 			221 => 'Trading Post',
 			222 => 'Clover Field',
 			223 => 'Cursed Ground',
@@ -1198,6 +1233,7 @@
 			20 => 'Captain',
 			21 => 'Navigator',
 			22 => 'HOTA extra',
+			31 => 'Random',
 		];
 
 
@@ -1402,41 +1438,42 @@
 			176 => 'Kinkeria',
 			177 => 'Ranloo',
 			
-			255 => '-',
+			255 => 'Random',
 		];
 		
 		public $BlockMapBits = [
-			1 => 'VISIBLE',
-			2 => 'VISITABLE',
-			4 => 'BLOCKED'
+			BLOCKMAPBITS::VISIBLE   => 'Visible', //1
+			BLOCKMAPBITS::VISITABLE => 'Visitable', //2
+			BLOCKMAPBITS::BLOCKED   => 'Blocked',  //4
+			BLOCKMAPBITS::COMBINED  => 'Combined', //6
 		];
 	
 		public $RewardType = [
-			REWARDTYPE::NOTHING => 'NOTHING',
-			REWARDTYPE::EXPERIENCE => 'EXPERIENCE',
-			REWARDTYPE::MANA_POINTS => 'MANA_POINTS',
-			REWARDTYPE::MORALE_BONUS => 'MORALE_BONUS',
-			REWARDTYPE::LUCK_BONUS => 'LUCK_BONUS',
-			REWARDTYPE::RESOURCES => 'RESOURCES',
-			REWARDTYPE::PRIMARY_SKILL => 'PRIMARY_SKILL',
-			REWARDTYPE::SECONDARY_SKILL => 'SECONDARY_SKILL',
-			REWARDTYPE::ARTIFACT => 'ARTIFACT',
-			REWARDTYPE::SPELL => 'SPELL',
-			REWARDTYPE::CREATURE => 'CREATURE',
-	 ];
- 
+			REWARDTYPE::NOTHING => 'Nothing',
+			REWARDTYPE::EXPERIENCE => 'Experience',
+			REWARDTYPE::MANA_POINTS => 'Mana points',
+			REWARDTYPE::MORALE_BONUS => 'Morale bonus',
+			REWARDTYPE::LUCK_BONUS => 'Luck bonus',
+			REWARDTYPE::RESOURCES => 'Resources',
+			REWARDTYPE::PRIMARY_SKILL => 'Primary Skill',
+			REWARDTYPE::SECONDARY_SKILL => 'Secondary skill',
+			REWARDTYPE::ARTIFACT => 'Artifact',
+			REWARDTYPE::SPELL => 'Spell',
+			REWARDTYPE::CREATURE => 'Creature',
+	];
+
 		public $QuestMission = [
-			QUESTMISSION::NONE => 'NONE',
-			QUESTMISSION::LEVEL => 'LEVEL',
-			QUESTMISSION::PRIMARY_STAT => 'PRIMARY_STAT',
-			QUESTMISSION::KILL_HERO => 'KILL_HERO',
-			QUESTMISSION::KILL_CREATURE => 'KILL_CREATURE',
-			QUESTMISSION::ART => 'ART',
-			QUESTMISSION::ARMY => 'ARMY',
-			QUESTMISSION::RESOURCES => 'RESOURCES',
-			QUESTMISSION::HERO => 'HERO',
-			QUESTMISSION::PLAYER => 'PLAYER',
-			QUESTMISSION::KEYMASTER => 'KEYMASTER',
+			QUESTMISSION::NONE => 'None',
+			QUESTMISSION::LEVEL => 'Level',
+			QUESTMISSION::PRIMARY_STAT => 'Primary stat',
+			QUESTMISSION::KILL_HERO => 'Kill hero',
+			QUESTMISSION::KILL_CREATURE => 'Kill creature',
+			QUESTMISSION::ART => 'Artifact',
+			QUESTMISSION::ARMY => 'Army',
+			QUESTMISSION::RESOURCES => 'Resources',
+			QUESTMISSION::HERO => 'Hero',
+			QUESTMISSION::PLAYER => 'Player',
+			QUESTMISSION::KEYMASTER => 'Keymaster',
 		];
 		
 		public $Victory = [

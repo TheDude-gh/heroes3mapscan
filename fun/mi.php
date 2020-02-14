@@ -121,8 +121,8 @@
 		file_append('sqlog.sql', $count."\n".$sql."\n\n");
 	}
 	
-	function comma($value){
-		return number_format($value, 0, ',', '&nbsp;');
+	function comma($value, $round = 0){
+		return number_format($value, $round, '.', ',');
 	}
 	
 	function padleft($value){
