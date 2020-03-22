@@ -66,6 +66,10 @@
 		return mysqli_fetch_array($query, MYSQLI_NUM);
 	}
 
+	function mfs($query){
+		return mysqli_fetch_array($query, MYSQLI_ASSOC);
+	}
+
 	function mgr($sql){ //mysql get result - for one value results
 		@$res = mfa(mq($sql));
 		return $res[0];

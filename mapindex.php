@@ -60,7 +60,7 @@ else {
 	}
 	elseif($mapsearch) {
 		$mapsearch = mes($mapsearch);
-		$where = "WHERE m.mapname LIKE '%$mapsearch%'";
+		$where = "WHERE m.mapname LIKE '%$mapsearch%' OR m.mapfile LIKE '%$mapsearch%'";
 		$llink = 'map='.$mapsearch;
 	}
 
@@ -129,7 +129,7 @@ else {
 			<td>'.$loss.'</td>
 		</tr>
 		<tr>
-			<td></td>
+			<td>'.$res['mapfile'].'</td>
 			<td colspan="8">'.nl2br($res['mapdesc']).'</td>
 		</tr>
 		<tr>

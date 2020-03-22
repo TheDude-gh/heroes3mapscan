@@ -8,22 +8,31 @@
 	require_once './fun/mapconstants.php';
 
 	$mapname = expost('map', '');
+	$num = expost('num', 0);
 
-	echo $mapname;
 
 	$mapfile = MAPDIR.$mapname;
+
 	if(!file_exists($mapfile)) {
 		exit;
 	}
 
+	echo '<br /><br />'.$num.' '.$mapname.'<br />';
+
 	$tm = new TimeMeasure();
-	$map = new H3MAPSCAN($mapfile, false);
-	$map->PrintStateSet(false, true); //dont print, build map
-	$map->SetSaveMap(1);
+	//H3M_SAVEMAPDB | H3M_BUILDMAP
+	$map = new H3MAPSCAN($mapfile, H3M_SAVEMAPDB | H3M_BASICONLY);
 	$map->ReadMap();
 
+	if(!$map->readok) {
+		echo '<br />';
+		//rename($mapfile, 'mapsx/'.$mapname);
+	}
+	else {
+		echo ', Duration: ';
+		$tm->Measure();
+		$tm->showTime();
+		echo ' ** ';
+	}
 
-	echo ', Duration: ';
-	$tm->Measure();
-	$tm->showTime();
 ?>

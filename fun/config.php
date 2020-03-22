@@ -13,6 +13,12 @@
 	//folder with map images
 	DEFINE('MAPDIRIMG', './mapsimg/');
 
+	//folder with campaigns
+	DEFINE('MAPDIRCAM', './mapscam/');
+
+	//folder with cached map info
+	DEFINE('MAPDIRINFO', './mapsinfo/');
+
 	require_once './fun/access.php';
 
 ?>

@@ -69,6 +69,7 @@
 	}
 
 	class TERRAIN {
+		//normal
 		const DIRT      = 0;
 		const SAND      = 1;
 		const GRASS     = 2;
@@ -81,6 +82,45 @@
 		const ROCK      = 9;
 		const HIGHLANDS = 10;
 		const WASTELAND = 11;
+
+		//blocked
+		const BDIRT      = 20;
+		const BSAND      = 21;
+		const BGRASS     = 22;
+		const BSNOW      = 23;
+		const BSWAMP     = 24;
+		const BROUGH     = 25;
+		const BSUBTERAIN = 26;
+		const BLAVA      = 27;
+		const BWATER     = 28;
+		const BROCK      = 29;
+		const BHIGHLANDS = 30;
+		const BWASTELAND = 31;
+
+		//players
+		const RED        = 40;
+		const BLUE       = 41;
+		const TAN        = 42;
+		const GREEN      = 43;
+		const ORANGE     = 44;
+		const PURPLE     = 45;
+		const TEAL       = 46;
+		const PINK       = 47;
+		const NEUTRAL    = 48;
+		//special
+		const NONE       = 50;
+		const MINE       = 51;
+		const ARTIFACT   = 52;
+		const MONSTER    = 53;
+		const ANY        = 54;
+
+		//offsets
+		const OFFBLOCKED = 20;
+		const OFFPLAYERS = 40;
+		const OFFSPECIAL = 50;
+
+		//count
+		const TERRAINNUM = 12;
 	}
 
 	class BLOCKMAPBITS {
@@ -284,7 +324,6 @@
 		const HOTA_CLASS = 0;
 		const HOTA_NOTBEFORE = 1;
 	};
-
 
 	//constants class with items names
 	class HeroesConstants {
@@ -785,6 +824,14 @@
 			255 => 'Random',
 		];
 
+		public $monchar = [
+			0 => 'Always join', //compliant
+			1 => 'Likely join', //friendly
+			2 => 'May join', //aggressive
+			3 => 'Unlikely to join', //hostile
+			4 => 'Never join', //savage
+		];
+
 		public $Objects = [
 			0 => '<none>',
 			1 => '<none>',
@@ -1032,6 +1079,8 @@
 			4 => 'Crystal',
 			5 => 'Gems',
 			6 => 'Gold',
+			253 => 'Wood and Ore',
+			254 => 'Mercury, Sulfur, Crystal and Gems',
 		];
 
 		public $Artefacts = [
@@ -1439,7 +1488,133 @@
 			177 => 'Ranloo',
 
 			255 => 'Random',
+			65533 => 'Most Powerful Hero'
 		];
+
+		public $Buildings = [
+			0 => 'Town hall',
+			1 => 'City hall',
+			2 => 'Capitol',
+			3 => 'Fort',
+			4 => 'Citadel',
+			5 => 'Castle',
+			6 => 'Tavern',
+			7 => 'Blacksmith',
+			8 => 'Marketplace',
+			9 => 'Resource silo',
+
+			11 => 'Mages guild 1',
+			12 => 'Mages guild 2',
+			13 => 'Mages guild 3',
+			14 => 'Mages guild 4',
+			15 => 'Mages guild 5',
+			16 => 'Shipyard',
+			17 => 'Grail',
+			18 => 'Special 1',
+			19 => 'Special 2', //?
+			20 => 'Special 3',
+			21 => 'Special 4',
+			22 => 'Dwelling lvl 1',
+			23 => 'Dwelling lvl 1 upg',
+			24 => 'Horde lvl 1',
+			25 => 'Dwelling lvl 2',
+			26 => 'Dwelling lvl 2 upg',
+			27 => 'Horde lvl 2',
+			28 => 'Dwelling lvl 3',
+			29 => 'Dwelling lvl 3 upg',
+			30 => 'Horde lvl 3',
+			31 => 'Dwelling lvl 4',
+			32 => 'Dwelling lvl 4 upg',
+			33 => 'Horde lvl 4',
+			34 => 'Dwelling lvl 5',
+			35 => 'Dwelling lvl 5 upg',
+			36 => 'Horde lvl 5',
+			37 => 'Dwelling lvl 6',
+			38 => 'Dwelling lvl 6 upg',
+			39 => 'Dwelling lvl 7',
+			40 => 'Dwelling lvl 7 upg',
+		];
+
+		public $Experience = [
+			1 => 0,
+			2 => 1000,
+			3 => 2000,
+			4 => 3200,
+			5 => 4600,
+			6 => 6200,
+			7 => 8000,
+			8 => 10000,
+			9 => 12200,
+			10 => 14700,
+			11 => 17500,
+			12 => 20600,
+			13 => 24320,
+			14 => 28784,
+			15 => 34140,
+			16 => 40567,
+			17 => 48279,
+			18 => 57533,
+			19 => 68637,
+			20 => 81961,
+			21 => 97949,
+			22 => 117134,
+			23 => 140156,
+			24 => 167782,
+			25 => 200933,
+			26 => 240714,
+			27 => 288451,
+			28 => 345735,
+			29 => 414475,
+			30 => 496963,
+			31 => 595948,
+			32 => 714730,
+			33 => 857268,
+			34 => 1028313,
+			35 => 1233567,
+			36 => 1479871,
+			37 => 1775435,
+			38 => 2130111,
+			39 => 2555722,
+			40 => 3066455,
+			41 => 3679334,
+			42 => 4414788,
+			43 => 5297332,
+			44 => 6356384,
+			45 => 7627246,
+			46 => 9152280,
+			47 => 10982320,
+			48 => 13178368,
+			49 => 15813625,
+			50 => 18975933,
+			51 => 22770702,
+			52 => 27324424,
+			53 => 32788890,
+			54 => 39346249,
+			55 => 47215079,
+			56 => 56657675,
+			57 => 67988790,
+			58 => 81586128,
+			59 => 97902933,
+			60 => 117483099,
+			61 => 140979298,
+			62 => 169174736,
+			63 => 203009261,
+			64 => 243610691,
+			65 => 292332407,
+			66 => 350798466,
+			67 => 420957736,
+			68 => 505148860,
+			69 => 606178208,
+			70 => 727413425,
+			71 => 872895685,
+			72 => 1047474397,
+			73 => 1256968851,
+			74 => 1508362195,
+			75 => 1810034207,
+			//76 => -2122926675,
+			76 => 1 << 32,
+		];
+
 
 		public $BlockMapBits = [
 			BLOCKMAPBITS::VISIBLE   => 'Visible', //1

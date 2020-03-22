@@ -24,6 +24,8 @@ require_once 'fun/config.php';
 	.mc { margin: 0px auto; }
 
 	.smalltable {font-size: 14px;}
+	.colw100 { width: 100px; }
+	.colA { width: 30%; }
 
 	.color1 { background: #ff0000; padding: 0px 6px; border-radius:5px; } /* red */
 	.color2 { background: #3152ff; padding: 0px 6px; border-radius:5px; } /* blue */
@@ -38,13 +40,16 @@ require_once 'fun/config.php';
 </style>
 </head>
 <body>
-<a href="mapscan.php">Reload</a> | <a href="mapindex.php">Map List</a> <br />
+<a href="mapscan.php">Reload</a> | <a href="mapindex.php">Map List</a>
+| <a href="mapscan.php?nl=1">Reload no list</a>
+<br />
 <?php
-
 
 require_once 'fun/mapscanf.php';
 require_once 'fun/mapsupport.php';
 require_once 'fun/mapconstants.php';
+
+
 
 $mapok = false;
 $buildmap = true;
@@ -90,12 +95,12 @@ else {
 			$par = base64_encode($mapname);
 			if($mapcode == $par) {
 				$disp = $mapname.'<br />';
-				continue;
+				//continue;
 			}
 
 			$smapname = mes($mapname);
 
-			if(in_array($smapname, $mapdbs)) {
+			if(in_array($mapname, $mapdbs)) {
 				continue;
 			}
 
@@ -110,7 +115,11 @@ else {
 		}
 		else {
 			echo '<a href="saveall" id="mapread" onclick="return false;">Read and save all maps</a><br />';
-			echo '<p>'.$maplist.'</p>';
+			echo 'Total unsaved maps: '.count($maplistjs);
+			if(!exget('nl', 0)) {
+				echo '<p>'.$maplist.'</p>';
+			}
+			echo '<p id="mapreadstate"></p>';
 			echo '<p id="maplist"></p>';
 			echo '<script type="text/javascript">'.EOL.'var maplist = ['.EOL.TAB.'"'.implode($maplistjs, '",'.EOL.TAB.'"').'"'.EOL.']'.EOL.'</script>';
 		}
@@ -130,38 +139,25 @@ elseif($mapcode) {
 //read some maps only
 if($mapok) {
 	echo $disp;
-	global $tm;
 	$tm = new TimeMeasure();
-	$map = new H3MAPSCAN($mapfile, true);
-	$map->PrintStateSet(true, $buildmap);
-	$map->SetSaveMap(1);
+
+	/*
+	H3M_WEBMODE
+	H3M_PRINTINFO
+	H3M_BUILDMAP
+	H3M_SAVEMAPDB
+	H3M_EXPORTMAP
+	H3M_BASICONLY
+	H3M_MAPHTMCACHE
+	H3M_SPECIALACCESS
+	*/
+
+	$map = new H3MAPSCAN($mapfile, H3M_WEBMODE | H3M_PRINTINFO | H3M_BUILDMAP | H3M_SAVEMAPDB | H3M_MAPHTMCACHE);
 	$map->ReadMap();
 
 	$tm->Measure('End');
 	$tm->showTimes();
 }
-
-//read all maps
-if(false) {
-	$scan = new ScanSubDir();
-	$scan->SetFilter(array('h3m'));
-	$scan->scansubdirs(MAPDIR);
-	$files = $scan->GetFiles();
-
-	echo 'FILES: '.count($files).ENVE;
-
-	$tm = new TimeMeasure();
-
-	foreach($files as $k => $mapfile) {
-		$map = new H3MAPSCAN($mapfile, true);
-		$map->SetSaveMap(1);
-		$map->ReadMap();
-
-		$tm->Measure();
-		$tm->ShowTime(true, $k, $mapfile);
-	}
-}
-
 
 ?>
 </body>
