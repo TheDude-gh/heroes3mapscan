@@ -328,7 +328,7 @@
 	//constants class with items names
 	class HeroesConstants {
 
-		public $PlayersColours = [
+		public $PlayersColors = [
 			0 => 'Red',
 			1 => 'Blue',
 			2 => 'Tan',
@@ -1614,7 +1614,17 @@
 			//76 => -2122926675,
 			76 => 1 << 32,
 		];
-
+		
+		public $ObjectColors = [
+			0 => 'Blue',
+			1 => 'Green',
+			2 => 'Red',
+			3 => 'Dark Blue',
+			4 => 'Tan',
+			5 => 'Purple',
+			6 => 'White',
+			7 => 'Black',
+		];
 
 		public $BlockMapBits = [
 			BLOCKMAPBITS::VISIBLE   => 'Visible', //1

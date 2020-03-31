@@ -61,7 +61,7 @@ Licence: GNU GENERAL PUBLIC LICENSE Version 3
 
   Big thanks to team working on **[VCMI project](https://vcmi.eu/)**, which sources I used to study map structure of Heroes III and WOG.
 
-  As for HOTA map structure, I had to decode it more or less myself, but there was not many differences anyway.
+  Thanks to HOTA team for providing vital information about HOTA map format updates.
 
   Also thanks to some unnamed another PHP Heroes III map reader I found on web, which also helped with understanding Heroes III maps.
 

@@ -13,9 +13,14 @@ function FromArray($key, $array, $def = '?') {
 class ScanSubDir {
 	public $files = array();
 	private $filter = array();
+	private $scansubdirs = true;
 
 	public function SetFilter($filter) {
 		$this->filter = $filter;
+	}
+	
+	public function scansubdirs_set($value) {
+		$this->scansubdirs = $value;
 	}
 
 	public function scansubdirs($dir) {
@@ -23,7 +28,9 @@ class ScanSubDir {
 		foreach($sc as $fd) {
 			if($fd == '.' || $fd == '..') continue;
 			if(is_dir($dir.$fd)) {
-				$this->scansubdirs($dir.$fd.'/');
+				if($this->scansubdirs) {
+					$this->scansubdirs($dir.$fd.'/');
+				}
 			}
 			else {
 				$pi = pathinfo($dir.$fd);
@@ -115,7 +122,7 @@ class TimeMeasure {
 
 	public function ShowTime($print = 1, $pos = -1, $text = '') {
 		if($pos == -1) {
-			$echo = sprintf('%3.3f', ($this->now - $this->start)).' s'.ENVE;
+			$echo = sprintf('%3.3f', ($this->now - $this->start)).' s';
 		}
 		else {
 			$echo = sprintf('%5d	%4.3fs	%4.3fs	', $pos, ($this->now - $this->start), ($this->now - $this->prev)).' '.$text.ENVE;

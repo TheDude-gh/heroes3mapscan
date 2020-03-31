@@ -10,11 +10,13 @@ require_once 'fun/config.php';
 <head>
 	<title>Heroes III Map Scanner</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8;" />
+	<link rel="shortcut icon" href="css/img/heroes.png" type="image/x-icon" />
+	<link type="text/css" rel="stylesheet" media="all" href="css/heroesmaps.css	" />
 	<script type="application/javascript" src="js/jquery-2.1.3.min.js"></script>
 	<script type="application/javascript" src="js/jquery-ui.js"></script>
 	<script type="application/javascript" src="js/mapread.js"></script>
 <style>
-	* {background: #ddc; font-family: calibri, arial, sans-serif; }
+	*, body {background: #ddc; font-family: calibri, arial, sans-serif; }
 	table {border-collapse:collapse; margin: 1em; border: solid 1px #000;}
 	th { background: #dd1;}
 	th, td {border: solid 1px #000; min-width: 1em; padding: 1px 5px;}
@@ -40,7 +42,7 @@ require_once 'fun/config.php';
 </style>
 </head>
 <body>
-<a href="mapscan.php">Reload</a> | <a href="mapindex.php">Map List</a>
+<a href="mapscan.php">Reload</a> | <a href="mapscan.php?scan=1">Scan</a> | <a href="maplist.php">Map List</a>
 | <a href="mapscan.php?nl=1">Reload no list</a>
 <br />
 <?php
@@ -56,6 +58,8 @@ $buildmap = true;
 $mapfiledb = false;
 $mapid = intval(exget('mapid', 0));
 
+$scan = exget('scan');
+
 $mapcode = exget('mapcode');
 $disp = '';
 
@@ -69,7 +73,7 @@ if($mapid) {
 		$mapfiledb = mgr($sql);
 	}
 }
-else {
+elseif($scan) {
 	$scan = new ScanSubDir();
 	$scan->SetFilter(array('h3m'));
 	$scan->scansubdirs(MAPDIR);

@@ -54,7 +54,12 @@ $scan->SetFilter(array('h3c'));
 $scan->scansubdirs(MAPDIR);
 $files = $scan->GetFiles();*/
 
-$num = 4;
+$num = 16;
+
+$n = exget('n');
+if($n) {
+	$num = $n;
+}
 
 $cam = [
 	0 => 'Enderasian Crusades.h3c',
@@ -73,14 +78,25 @@ $cam = [
 	13 => 'Honza3.h3c',
 	14 => 'Rebellion.h3c',
 	15 => 'Avatar.h3c',
+	16 => 'zc1.h3c',
+	17 => 'zc2.h3c',
+	18 => 'zc3.h3c',
+	19 => 'zc4.h3c',
+	20 => 'H1Roger.h3c',
+	21 => 'H2Terror.h3c',
+	22 => 'H3Horn.h3c',
 ];
 
 $camfile = $cam[$num];
+/*
+H3C_PRINTINFO   
+H3C_SAVECAMDB   
+H3C_EXPORTMAPS  
+H3C_CAMHTMCACHE 
+*/
 
-$onlyunzip = false;
-
-$mapfile = CAMDIR.$camfile;
-$map = new H3CAMSCAN($mapfile, $onlyunzip);
+$mapfile = MAPDIRCAM.$camfile;
+$map = new H3CAMSCAN($mapfile, H3C_PRINTINFO | H3C_SAVECAMDB | H3C_EXPORTMAPS | H3C_CAMHTMCACHE);
 $map->ReadCAM();
 $map->ReadMaps();
 

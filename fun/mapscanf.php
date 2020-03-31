@@ -18,6 +18,7 @@ class H3MAPSCAN {
 	const HOTA = 0x20;
 
 	const HOTA_SUBREV1 = 1;
+	const HOTA_SUBREV2 = 2;
 	const HOTA_SUBREV3 = 3;
 
 	private $version = '';
@@ -78,6 +79,7 @@ class H3MAPSCAN {
 	private $quest_list = array();
 	private $events_list = array(); //map event, pandora, town event
 	private $messages_list = array(); //signs and bottles
+	private $keys_list = array();
 
 	//curent object being read and its coords
 	private $curobj;
@@ -228,11 +230,13 @@ class H3MAPSCAN {
 		$mapdesc = mes($this->description);
 		$mapimage = mes($this->mapimage);
 
-		$sql = "INSERT INTO heroes3_maps (`mapfile`, `mapdir`, `mapname`, `author`, `language`, `mapdesc`, `version`, `size`, `sizename`, `levels`, `diff`, `diffname`,
+		$sql = "INSERT INTO heroes3_maps (heroes, campaign, id_campaign, `mapfile`, `mapdir`, `mapname`, `author`, `language`, `mapdesc`, `version`, `subversion`,
+			`size`, `sizename`, `levels`, `diff`, `diffname`,
 			`playersnum`, `playhuman`, `playai`, `teamnum`, `victory`, `loss`, `filecreate`, `filechanged`, `filesizeC`, `filesizeU`,
 			`mapimage`, `md5`) VALUES
-			('$mapfile', '$mapdir/', '$mapname', '".$this->author."', '".$this->language."', '$mapdesc', '".$this->versionname."', ".$this->map_size.", '".$this->map_sizename."',
-				".$this->underground.", '".$this->map_diff."', '".$this->map_diffname."', ".$this->mapplayersnum.", ".$this->mapplayershuman.", ".$this->mapplayersai.",
+			(3, 0, 0, '$mapfile', '$mapdir/', '$mapname', '".$this->author."', '".$this->language."', '$mapdesc', '".$this->versionname."', ".$this->hota_subrev.",
+				".$this->map_size.", '".$this->map_sizename."', ".$this->underground.", '".$this->map_diff."', '".$this->map_diffname."',
+				".$this->mapplayersnum.", ".$this->mapplayershuman.", ".$this->mapplayersai.",
 				".$this->teamscount.", ".$this->victoryCond['type'].", ".$this->lossCond['type'].",
 			FROM_UNIXTIME(".$this->filectime."), FROM_UNIXTIME(".$this->filemtime."), ".$this->filesizeC.", ".$this->filesizeU.", '".$mapimage."', '".$this->md5hash."')";
 		mq($sql);
@@ -262,10 +266,42 @@ class H3MAPSCAN {
 
 		$subrev = ($this->version == $this::HOTA) ? ' '.$this->hota_subrev : '';
 
-		$print = '';
+		$print = '<div class="mapdetail">
+			<table class="mapdetailtable">
+				<tr>
+					<td class="mapdtd vat">
+					  <p class="listcontent">
+							List of details<br />
+							<a href="#description">Description</a><br />
+							<a href="#players">Players</a><br />
+							<a href="#mapimage">Map</a><br />
+							<a href="#terrain">Terrain</a><br />
+							<a href="#events">Events</a><br />
+							<a href="#heroescustom">Heroes custom</a><br />
+							<a href="#artdis">Disabled artifacts</a><br />
+							<a href="#spelldis">Disabled spells</a><br />
+							<a href="#skilldis">Disabled skills</a><br />
+							<a href="#towns">Towns</a><br />
+							<a href="#heroes">Heroes</a><br />
+							<a href="#artifacts">Artifacts</a><br />
+							<a href="#mines">Mines</a><br />
+							<a href="#monsters">Monsters</a><br />
+							<a href="#quests">Quests</a><br />
+							<a href="#townevent">Town events</a><br />
+							<a href="#eventbox">Events and pandoras</a><br />
+							<a href="#signs">Signs and bottels</a><br />
+							<a href="#rumors">Rumors</a><br />
+							<a href="#keys">Keys and gates</a><br />
+							<a href="#objects">Objects</a>
+						</p>
+					</td>
+					<td class="mapdtd">'.EOL.EOL;
 
-		$print .= '<table>
-				<tr><td>File</td><td>'.$this->mapfile.'</td></tr>
+
+		$print .= '<a name="description"></a>
+		<table>
+				<tr><th colspan="2">Map details</th></tr>
+				<tr><td class="colw200">File</td><td>'.$this->mapfile.'</td></tr>
 				<tr><td>Name</td><td>'.$this->map_name.'</td></tr>
 				<tr><td>Description</td><td>'.nl2br($this->description).'</td></tr>
 				<tr><td>Version</td><td>'.$this->versionname.$subrev.'</td></tr>
@@ -280,10 +316,11 @@ class H3MAPSCAN {
 				<tr><td>Language</td><td>'.$this->GetLanguage().'</td></tr>
 			</table>';
 
-		$print .= '<table class="smalltable">
+		$print .= '<a name="players"></a>
+			<table class="smalltable">
 				<tr>
 					<th>#</th>
-					<th>Colour</th>
+					<th>Color</th>
 					<th>Human</th>
 					<th>AI</th>
 					<th>Behaviour</th>
@@ -329,13 +366,14 @@ class H3MAPSCAN {
 
 
 		$this->BuildMap();
-		$print .= $this->DisplayMap();
+		$print .= '<a name="mapimage"></a>'.EOL.$this->DisplayMap();
 
 		//terrain percentage
 		$totalsize1 = $this->map_size * $this->map_size;
 		$totalsize2 = $totalsize1 * ($this->underground + 1);
 
-		$print .= '<table><tr>';
+		$print .= '<a name="terrain"></a>
+		<table><tr>';
 		for ($i = 0; $i < 3; $i++) {
 			$totalsize = $i == 2 ? $totalsize2 : $totalsize1;
 			if($i == 0) {
@@ -367,7 +405,7 @@ class H3MAPSCAN {
 
 		//disabled heroes
 		$n = 0;
-		$print .= '
+		$print .= '<a name="heroescustom"></a>
 			<table class="smalltable">
 				<tr><th>#</th><th colspan="2">Unavailable heroes</th></tr>';
 		foreach($this->disabledHeroes as $class => $heroes) {
@@ -421,7 +459,7 @@ class H3MAPSCAN {
 
 
 		sort($this->disabledArtifacts);
-		$print .= '
+		$print .= '<a name="artdis"></a>
 			<table class="smalltable">
 				<tr><th>#</th><th>Disabled Artifacts</th></tr>';
 		foreach($this->disabledArtifacts as $k => $art) {
@@ -433,7 +471,7 @@ class H3MAPSCAN {
 		$print .= '</table>';
 
 		sort($this->disabledSpells);
-		$print .= '
+		$print .= '<a name="spelldis"></a>
 			<table class="smalltable">
 				<tr><th>#</th><th>Disabled Spells</th></tr>';
 		foreach($this->disabledSpells as $k => $spell) {
@@ -445,7 +483,7 @@ class H3MAPSCAN {
 		$print .= '</table>';
 
 		sort($this->disabledSkills);
-		$print .= '
+		$print .= '<a name="skilldis"></a>
 			<table class="smalltable">
 				<tr><th>#</th><th>Disabled Skills</th></tr>';
 		foreach($this->disabledSkills as $k => $spell) {
@@ -459,7 +497,7 @@ class H3MAPSCAN {
 		//towns list
 		usort($this->towns_list, 'SortTownsByName');
 		$n = 0;
-		$print .= '
+		$print .= '<a name="towns"></a>
 			<table class="smalltable">
 				<tr><th>Towns</th><th>Name</th><th>Position</th><th>Owner</th><th>Type</th><th>Events</th><th>Troops</th><th>Spell</th></tr>';
 		foreach($this->towns_list as $towno) {
@@ -479,7 +517,7 @@ class H3MAPSCAN {
 
 		//heroes list
 		$n = 0;
-		$print .= '
+		$print .= '<a name="heroes"></a>
 			<table class="smalltable">
 				<tr><th>Heroes</th><th>Name</th><th>Position</th><th>Owner</th><th>Class</th>
 					<th>Exp</th><th>Primary</th><th>Secondary</th><th>Troops</th><th>Artifacts</th></tr>';
@@ -520,7 +558,7 @@ class H3MAPSCAN {
 		//artifact list
 		usort($this->artifacts_list, 'ListSortByName');
 		$n = 0;
-		$print .= '
+		$print .= '<a name="artifacts"></a>
 			<table class="smalltable">
 				<tr><th>Artifacts</th><th>Name</th><th>Position</th><th>Parent</th></tr>';
 		foreach($this->artifacts_list as $art) {
@@ -536,7 +574,7 @@ class H3MAPSCAN {
 		//mines list
 		usort($this->mines_list, 'ListSortByName');
 		$n = 0;
-		$print .= '
+		$print .= '<a name="mines"></a>
 			<table class="smalltable">
 				<tr><th>Mines</th><th>Name</th><th>Position</th><th>Owner</th><th>Resources</th></tr>';
 		foreach($this->mines_list as $mine) {
@@ -554,7 +592,7 @@ class H3MAPSCAN {
 		//monster list
 		usort($this->monsters_list, 'ListSortByName');
 		$n = 0;
-		$print .= '
+		$print .= '<a name="monsters"></a>
 			<table class="smalltable">
 				<tr><th>Monsters</th><th>Name</th><th>Count</th><th>Position</th><th>Parent</th><th>Treasure</th><th>Info</th></tr>';
 		foreach($this->monsters_list as $mon) {
@@ -574,7 +612,7 @@ class H3MAPSCAN {
 		//seers huts and quest master
 		usort($this->quest_list, 'ListSortByName');
 		$n = 0;
-		$print .= '
+		$print .= '<a name="quests"></a>
 			<table class="smalltable">
 				<tr><th>Quest</th><th>Giver</th><th>Position</th><th>Quest</th><th colspan="3">Reward</th></tr>';
 		foreach($this->quest_list as $quest) {
@@ -598,7 +636,7 @@ class H3MAPSCAN {
 
 		//towns events list
 		$n = 0;
-		$print .= '
+		$print .= '<a name="townevent"></a>
 			<table class="smalltable">
 				<tr><th>Towns</th><th>Name</th><th>Position</th><th>Owner</th><th>Type</th>
 					<th>Event #</th><th>Name</th><th>Players</th><th>Human / AI</th><th>First</th><th>Period</th><th>Resources</th>
@@ -677,7 +715,7 @@ class H3MAPSCAN {
 
 		//events, pandora box
 		$n = 0;
-		$print .= '
+		$print .= '<a name="eventbox"></a>
 			<table class="smalltable">
 				<tr><th>#</th><th>Event / Box</th><th>Position</th><th>Available for</th><th>Human/AI</th><th>One visit</th>
 					<th>Guards</th><th>Content</th>
@@ -746,7 +784,7 @@ class H3MAPSCAN {
 
 		//signs and bottles
 		$n = 0;
-		$print .= '
+		$print .= '<a name="signs"></a>
 			<table class="smalltable">
 				<tr><th colspan="2">Signs and bottles</th><th>Position</th><th>Text</th></tr>';
 		foreach($this->messages_list as $msg) {
@@ -760,7 +798,7 @@ class H3MAPSCAN {
 		$print .= '</table>';
 
 		//rumors
-		$print .= '
+		$print .= '<a name="rumors"></a>
 			<table class="smalltable">
 				<tr><th colspan="3">Rumors</th></tr>';
 		if(empty($this->rumors)) {
@@ -779,7 +817,7 @@ class H3MAPSCAN {
 
 		//day events
 		usort($this->events, 'EventSortByDate');
-		$print .= '
+		$print .= '<a name="events"></a>
 			<table class="smalltable">
 				<tr><th>Events Date</th><th>Name</th><th>Human</th><th>AI</th><th>Players</th><th>First</th><th>Interval</th>
 					<th>Resources</th><th>Message</th></tr>';
@@ -804,6 +842,26 @@ class H3MAPSCAN {
 			</tr>';
 		}
 		$print .= '</table>';
+		
+
+		//keymaster's list
+		$n = 0;
+		$print .= '<a name="keys"></a>
+			<table class="smalltable">
+				<tr><th>#</th><th>Keymasters</th><th>Position</th><th>Subid</th><th>Type</th></tr>';
+		foreach($this->keys_list as $key) {
+			$color = FromArray($key['subid'], $this->CS->ObjectColors);
+
+			$print .= '<tr>
+				<td class="ac">'.(++$n).'</td>
+				<td>'.$key['objname'].'</td>
+				<td>'.$key['pos']->GetCoords().'</td>
+				<td>'.$key['subid'].'</td>
+				<td>'.$color.'</td>
+			</tr>';
+		}
+		$print .= '</table>';
+
 
 
 		$print .= '<br />Templates count: '.$this->objTemplatesNum.'<br />';
@@ -820,7 +878,7 @@ class H3MAPSCAN {
 
 		asort($this->objects_unique);
 		$n = 0;
-		$print .= '
+		$print .= '<a name="objects"></a>
 			<table class="smalltable">
 				<tr><th>Objects</th><th>ID</th><th>Name</th><th>Count</th></tr>';
 		foreach($this->objects_unique as $objid => $obju) {
@@ -831,7 +889,11 @@ class H3MAPSCAN {
 				<td class="ar">'.$obju['count'].'</td>
 			</tr>';
 		}
-		$print .= '</table>';
+		$print .= '</table>
+						</td>
+					</tr>
+				</table>
+			</div>';
 
 		echo $print;
 		if($this->maphtmcache) {
@@ -854,12 +916,12 @@ class H3MAPSCAN {
 		$this->version = $this->ReadUint32();
 		if($this->version == $this::HOTA) {
 			$this->hota_subrev = $this->ReadUint32();
-			if($this->hota_subrev == $this::HOTA_SUBREV1) {
-				$this->SkipBytes(2); //unknown
+			if($this->hota_subrev >= $this::HOTA_SUBREV1) {
+				$mirror = $this->ReadUint8();
+				$this->hota_arena = $this->ReadUint8(); //arena
 			}
-			elseif($this->hota_subrev == $this::HOTA_SUBREV3) {
-				$this->hota_arena = $this->ReadUint8();
-				$this->SkipBytes(5); //unknown
+			if($this->hota_subrev >= $this::HOTA_SUBREV2) {
+				$this->terrain_count = $this->ReadUint32();
 			}
 		}
 
@@ -956,7 +1018,7 @@ class H3MAPSCAN {
 			$human = $this->ReadUint8();
 			$ai = $this->ReadUint8();
 
-			//nobody can play this colour
+			//nobody can play this color
 			if($human == 0 && $ai == 0) {
 				switch($this->version){
 					case $this::ROE: $this->SkipBytes(6);  break;
@@ -1141,11 +1203,15 @@ class H3MAPSCAN {
 		if($this->version != $this::HOTA) {
 			return;
 		}
-		$this->monplague_week = $this->ReadUint8();
-		$this->SkipBytes(3); //unknown
+		$this->monplague_week = $this->ReadUint32();
 
 		if($this->hota_subrev >= $this::HOTA_SUBREV1) {
-			$this->SkipBytes(6);
+			$art_combinated = $this->ReadUint32();
+			if($art_combinated > 0) {
+				$art_comb_num = (int)ceil($art_combinated / 8);
+				$this->SkipBytes($art_comb_num); //skip, not in scanner
+			}
+			
 			if($this->hota_subrev >= $this::HOTA_SUBREV3) {
 				$this->combat_round_limit = $this->ReadUint32();
 			}
@@ -1769,7 +1835,7 @@ class H3MAPSCAN {
 		$output = '<br />Map : size='.$this->map_size.', cells='.$mapsizepow.', bytes='.($mapsizepow * 7).'<br />';
 
 		$imgground = file_exists($imgmapnameg) ? '<img src="'.$imgmapnameg.'" alt="ground" title="ground" />' : 'Map Ground';
-		$output .= '<table><tr><td>'.$imgground.'</td>';
+		$output .= '<table class="mapimages"><tr><td>'.$imgground.'</td>';
 		if($this->underground) {
 			$imguground = file_exists($imgmapnameu) ? '<img src="'.$imgmapnameu.'" alt="ground" title="ground" />' : 'Map Ground';
 			$output .= '<td>'.$imguground.'</td>';
@@ -1820,7 +1886,7 @@ class H3MAPSCAN {
 				$this->SkipBytes(12); //skip masks
 			}
 
-			$this->SkipBytes(2); //not sure
+			$this->SkipBytes(2); //landscape
 			$this->SkipBytes(2); //allowed terrain for object, not needed
 
 			$objtemp['id'] = $this->ReadUint32();
@@ -1878,7 +1944,7 @@ class H3MAPSCAN {
 
 		for($i = 0; $i < $this->objectsNum; $i++) {
 			$obj = array();
-			$tileowner = OWNERNONE; //player coloured tile
+			$tileowner = OWNERNONE; //player colored tile
 			$special = MAPSPECIAL::NONE; //special object displayed on map
 			$saveobject = false; //no need to save any object to array, not used anywhere currently
 
@@ -1975,7 +2041,7 @@ class H3MAPSCAN {
 						$event['availableFor'] = $this->ReadUint8();
 						$event['computerActivate'] = $this->ReadUint8();
 						$event['removeAfterVisit'] = $this->ReadUint8();
-						if($this->hota_subrev == $this::HOTA_SUBREV3) {
+						if($this->hota_subrev >= $this::HOTA_SUBREV3) {
 							$event['humanActivate'] = $this->ReadUint8();
 						}
 						else {
@@ -1996,9 +2062,9 @@ class H3MAPSCAN {
 					$this->events_list[] = $obj;
 					break;
 
-			case OBJECTS::HERO:
-			case OBJECTS::RANDOM_HERO:
-			case OBJECTS::PRISON:
+				case OBJECTS::HERO:
+				case OBJECTS::RANDOM_HERO:
+				case OBJECTS::PRISON:
 					$obj['data'] = $this->ReadHero();
 					$tileowner = $obj['data']['PlayerColor'];
 					$this->heroes_list[] = $obj;
@@ -2015,161 +2081,161 @@ class H3MAPSCAN {
 					);
 					break;
 
-			case OBJECTS::MONSTER:	//Monster
-			case OBJECTS::RANDOM_MONSTER:
-			case OBJECTS::RANDOM_MONSTER_L1:
-			case OBJECTS::RANDOM_MONSTER_L2:
-			case OBJECTS::RANDOM_MONSTER_L3:
-			case OBJECTS::RANDOM_MONSTER_L4:
-			case OBJECTS::RANDOM_MONSTER_L5:
-			case OBJECTS::RANDOM_MONSTER_L6:
-			case OBJECTS::RANDOM_MONSTER_L7:
-				//read monster
-				$monster = array();
-				$monster['uid'] = OBJECT_INVALID;
+				case OBJECTS::MONSTER:	//Monster
+				case OBJECTS::RANDOM_MONSTER:
+				case OBJECTS::RANDOM_MONSTER_L1:
+				case OBJECTS::RANDOM_MONSTER_L2:
+				case OBJECTS::RANDOM_MONSTER_L3:
+				case OBJECTS::RANDOM_MONSTER_L4:
+				case OBJECTS::RANDOM_MONSTER_L5:
+				case OBJECTS::RANDOM_MONSTER_L6:
+				case OBJECTS::RANDOM_MONSTER_L7:
+					//read monster
+					$monster = array();
+					$monster['uid'] = OBJECT_INVALID;
 
-				$monster['name'] = ($objid == OBJECTS::MONSTER) ? $this->GetCreatureById($objsubid) : $obj['objname'];
+					$monster['name'] = ($objid == OBJECTS::MONSTER) ? $this->GetCreatureById($objsubid) : $obj['objname'];
 
-				if($this->version > $this::ROE) {
-					$monster['uid'] = $this->ReadUint32();
-				}
+					if($this->version > $this::ROE) {
+						$monster['uid'] = $this->ReadUint32();
+					}
 
-				$monster['count'] = $this->ReadUint16();
+					$monster['count'] = $this->ReadUint16();
 
-				$monster['character'] = $this->GetMonsterCharacter($this->ReadUint8());
+					$monster['character'] = $this->GetMonsterCharacter($this->ReadUint8());
 
-				$hasMessage = $this->ReadUint8();
-				$artifact = '';
-				if($hasMessage) {
-					$monster['message'] = $this->ReadString();
-					$monster['resources'] = $this->ReadResourses();
+					$hasMessage = $this->ReadUint8();
+					$artifact = '';
+					if($hasMessage) {
+						$monster['message'] = $this->ReadString();
+						$monster['resources'] = $this->ReadResourses();
 
-					if ($this->version == $this::ROE) {
-						$artid = $this->ReadUint8();
+						if ($this->version == $this::ROE) {
+							$artid = $this->ReadUint8();
+						}
+						else {
+							$artid = $this->ReadUint16();
+						}
+
+						if($this->version == $this::ROE && $artid == HNONE) {
+							$artid = HNONE16;
+						}
+
+						if($artid != HNONE16) {
+							$artifact = $this->GetArtifactById($artid);
+							$this->artifacts_list[] = new ListObject($artifact, $obj['pos'], 'Monster: '.$monster['name']);
+						}
+					}
+					$monster['neverFlees'] = $this->ReadUint8();
+					$monster['notGrowingTeam'] = $this->ReadUint8();
+
+					$this->SkipBytes(2);
+
+					if($this->hota_subrev >= $this::HOTA_SUBREV3) {
+						$monster['characterSpec'] = $this->ReadUint32(); //precise setup      num of ffffffff
+						$monster['moneyJoin'] = $this->ReadUint8();
+						$monster['percentJoin'] = $this->ReadUint32();
+						$monster['upgradedStack'] = $this->ReadUint32(); //upgraded stack in not upgraded monster 0/1/ffffffff (def)
+						$monster['stacksCount'] = $this->ReadUint32(); //stack count       00=one more, ffffffff=def, fdffffff=avg, fdffffff=on less or num
+					}
+
+					$obj['data'] = $monster;
+
+					$info = $monster['character'].($monster['neverFlees'] ? ', Never fless' : '');
+					$this->monsters_list[] = new ListObject($monster['name'], $this->curcoor, 'Map', $artifact, $monster['count'], $info);
+
+					$this->mapobjects[] = array(
+						'object' => MAPOBJECTS::MONSTER,
+						'objid' => $objid,
+						'pos' => $obj['pos'],
+						'name' => $monster['name'],
+						'owner' => OWNERNONE,
+						'type' => $objsubid,
+						'uid' => $monster['uid'],
+					);
+					break;
+
+				case OBJECTS::OCEAN_BOTTLE:
+				case OBJECTS::SIGN:
+					$signbottle['text'] = $this->ReadString();
+					$this->SkipBytes(4);
+					$obj['data'] = $signbottle;
+					$this->messages_list[] = $obj;
+					break;
+
+				case OBJECTS::SEER_HUT:
+					$obj['data'] = $this->ReadSeerHut();
+					break;
+
+				case OBJECTS::WITCH_HUT:
+					// in RoE we cannot specify it - all are allowed (I hope)
+					$allowed = array();
+					if($this->version > $this::ROE) {
+						for($j = 0 ; $j < 4; $j++) {
+							$c = $this->ReadUint8();
+							$allowed[] = sprintf('%08b ', $c);
+						}
+					}
+
+					$obj['data'] = $allowed;
+					break;
+
+				case OBJECTS::SCHOLAR:
+					$scholar['bonusType'] = $this->ReadUint8();
+					$scholar['bonusID'] = $this->ReadUint8();
+					$this->SkipBytes(6);
+					$obj['data'] = $scholar;
+					break;
+
+				case OBJECTS::GARRISON:
+				case OBJECTS::GARRISON2:
+					$stack = array();
+					$stack['owner'] = $this->ReadUint8();
+					$tileowner = $stack['owner'];
+					$this->SkipBytes(3);
+					$stack['monsters'] = $this->ReadCreatureSet(7);
+					if($this->version > $this::ROE) {
+						$stack['removableUnits'] = $this->ReadUint8();
 					}
 					else {
-						$artid = $this->ReadUint16();
+						$stack['removableUnits'] = 1;
+					}
+					$this->SkipBytes(8);
+
+					$obj['data'] = $stack;
+					break;
+
+				case OBJECTS::ARTIFACT:
+				case OBJECTS::RANDOM_ART:
+				case OBJECTS::RANDOM_TREASURE_ART:
+				case OBJECTS::RANDOM_MINOR_ART:
+				case OBJECTS::RANDOM_MAJOR_ART:
+				case OBJECTS::RANDOM_RELIC_ART:
+				case OBJECTS::SPELL_SCROLL:
+					$artifact = array();
+					$artifact['artid'] = OBJECT_INVALID;
+					$artifact['spellid'] = OBJECT_INVALID;
+
+					$artifact['stack'] = $this->ReadMessageAndGuards();
+
+					if($objid == OBJECTS::SPELL_SCROLL) {
+						$spellid = $this->ReadUint32();
+						$artifact['name'] = $obj['objname'].': '.$this->GetSpellById($spellid);
+					}
+					elseif($objid == OBJECTS::ARTIFACT) {
+						$artifact['name'] = $this->GetArtifactById($obj['subid']); //artid
+					}
+					else {
+						$artifact['name'] = $obj['objname'];
 					}
 
-					if($this->version == $this::ROE && $artid == HNONE) {
-						$artid = HNONE16;
-					}
+					$this->artifacts_list[] = new ListObject($artifact['name'], $obj['pos'], 'Map');
 
-					if($artid != HNONE16) {
-						$artifact = $this->GetArtifactById($artid);
-						$this->artifacts_list[] = new ListObject($artifact, $obj['pos'], 'Monster: '.$monster['name']);
-					}
-				}
-				$monster['neverFlees'] = $this->ReadUint8();
-				$monster['notGrowingTeam'] = $this->ReadUint8();
+					$obj['data'] = $artifact;
+					break;
 
-				$this->SkipBytes(2);
-
-				if($this->hota_subrev >= $this::HOTA_SUBREV3) {
-					$monster['characterSpec'] = $this->ReadUint32(); //precise setup      num of ffffffff
-					$monster['moneyJoin'] = $this->ReadUint8();
-					$monster['percentJoin'] = $this->ReadUint32();
-					$monster['upgradedStack'] = $this->ReadUint32(); //upgraded stack in not upgraded monster 0/1/ffffffff (def)
-					$monster['stacksCount'] = $this->ReadUint32(); //stack count       00=one more, ffffffff=def, fdffffff=avg, fdffffff=on less or num
-				}
-
-				$obj['data'] = $monster;
-
-				$info = $monster['character'].($monster['neverFlees'] ? ', Never fless' : '');
-				$this->monsters_list[] = new ListObject($monster['name'], $this->curcoor, 'Map', $artifact, $monster['count'], $info);
-
-				$this->mapobjects[] = array(
-					'object' => MAPOBJECTS::MONSTER,
-					'objid' => $objid,
-					'pos' => $obj['pos'],
-					'name' => $monster['name'],
-					'owner' => OWNERNONE,
-					'type' => $objsubid,
-					'uid' => $monster['uid'],
-				);
-				break;
-
-			case OBJECTS::OCEAN_BOTTLE:
-			case OBJECTS::SIGN:
-				$signbottle['text'] = $this->ReadString();
-				$this->SkipBytes(4);
-				$obj['data'] = $signbottle;
-				$this->messages_list[] = $obj;
-				break;
-
-			case OBJECTS::SEER_HUT:
-				$obj['data'] = $this->ReadSeerHut();
-				break;
-
-			case OBJECTS::WITCH_HUT:
-				// in RoE we cannot specify it - all are allowed (I hope)
-				$allowed = array();
-				if($this->version > $this::ROE) {
-					for($j = 0 ; $j < 4; $j++) {
-						$c = $this->ReadUint8();
-						$allowed[] = sprintf('%08b ', $c);
-					}
-				}
-
-				$obj['data'] = $allowed;
-				break;
-
-			case OBJECTS::SCHOLAR:
-				$scholar['bonusType'] = $this->ReadUint8();
-				$scholar['bonusID'] = $this->ReadUint8();
-				$this->SkipBytes(6);
-				$obj['data'] = $scholar;
-				break;
-
-			case OBJECTS::GARRISON:
-			case OBJECTS::GARRISON2:
-				$stack = array();
-				$stack['owner'] = $this->ReadUint8();
-				$tileowner = $stack['owner'];
-				$this->SkipBytes(3);
-				$stack['monsters'] = $this->ReadCreatureSet(7);
-				if($this->version > $this::ROE) {
-					$stack['removableUnits'] = $this->ReadUint8();
-				}
-				else {
-					$stack['removableUnits'] = 1;
-				}
-				$this->SkipBytes(8);
-
-				$obj['data'] = $stack;
-				break;
-
-			case OBJECTS::ARTIFACT:
-			case OBJECTS::RANDOM_ART:
-			case OBJECTS::RANDOM_TREASURE_ART:
-			case OBJECTS::RANDOM_MINOR_ART:
-			case OBJECTS::RANDOM_MAJOR_ART:
-			case OBJECTS::RANDOM_RELIC_ART:
-			case OBJECTS::SPELL_SCROLL:
-				$artifact = array();
-				$artifact['artid'] = OBJECT_INVALID;
-				$artifact['spellid'] = OBJECT_INVALID;
-
-				$artifact['stack'] = $this->ReadMessageAndGuards();
-
-				if($objid == OBJECTS::SPELL_SCROLL) {
-					$spellid = $this->ReadUint32();
-					$artifact['name'] = $obj['objname'].': '.$this->GetSpellById($spellid);
-				}
-				elseif($objid == OBJECTS::ARTIFACT) {
-					$artifact['name'] = $this->GetArtifactById($obj['subid']); //artid
-				}
-				else {
-					$artifact['name'] = $obj['objname'];
-				}
-
-				$this->artifacts_list[] = new ListObject($artifact['name'], $obj['pos'], 'Map');
-
-				$obj['data'] = $artifact;
-				break;
-
-			case OBJECTS::RANDOM_RESOURCE:
-			case OBJECTS::RESOURCE:
+				case OBJECTS::RANDOM_RESOURCE:
+				case OBJECTS::RESOURCE:
 					$res = array();
 					$res['stack'] = $this->ReadMessageAndGuards();
 					$res['amount'] = $this->ReadUint32();
@@ -2177,8 +2243,8 @@ class H3MAPSCAN {
 					$obj['data'] = $res;
 					break;
 
-			case OBJECTS::RANDOM_TOWN:
-			case OBJECTS::TOWN:
+				case OBJECTS::RANDOM_TOWN:
+				case OBJECTS::TOWN:
 					$obj['data'] = $this->ReadTown();
 
 					$tileowner = $obj['data']['owner'];
@@ -2203,8 +2269,8 @@ class H3MAPSCAN {
 					);
 					break;
 
-			case OBJECTS::MINE:
-			case OBJECTS::ABANDONED_MINE:
+				case OBJECTS::MINE:
+				case OBJECTS::ABANDONED_MINE:
 					$mine['owner'] = $this->ReadUint8(); //owner or resource mask for abandoned mine
 					$this->SkipBytes(3);
 					$tileowner = $mine['owner'];
@@ -2233,10 +2299,10 @@ class H3MAPSCAN {
 					$obj['data'] = $mine;
 					break;
 
-			case OBJECTS::CREATURE_GENERATOR1:
-			case OBJECTS::CREATURE_GENERATOR2:
-			case OBJECTS::CREATURE_GENERATOR3:
-			case OBJECTS::CREATURE_GENERATOR4:
+				case OBJECTS::CREATURE_GENERATOR1:
+				case OBJECTS::CREATURE_GENERATOR2:
+				case OBJECTS::CREATURE_GENERATOR3:
+				case OBJECTS::CREATURE_GENERATOR4:
 					$dwelling['owner'] = $this->ReadUint8();
 					$this->SkipBytes(3);
 					$tileowner = $dwelling['owner'];
@@ -2244,23 +2310,30 @@ class H3MAPSCAN {
 					$obj['data'] = $dwelling;
 					break;
 
-			case OBJECTS::SHRINE_OF_MAGIC_INCANTATION:
-			case OBJECTS::SHRINE_OF_MAGIC_GESTURE:
-			case OBJECTS::SHRINE_OF_MAGIC_THOUGHT:
+				case OBJECTS::SHRINE_OF_MAGIC_INCANTATION:
+				case OBJECTS::SHRINE_OF_MAGIC_GESTURE:
+				case OBJECTS::SHRINE_OF_MAGIC_THOUGHT:
 					$shrine = array();
 					$shrine['spellid'] = $this->ReadUint8();
 					$this->SkipBytes(3);
 					$obj['data'] = $shrine;
 					break;
 
-			case OBJECTS::GRAIL:
-				$grail['radius'] = $this->ReadUint32();
-				$obj['data'] = $grail;
-				continue;
+				case OBJECTS::GRAIL:
+					if($this->hota_subrev >= $this::HOTA_SUBREV3) {
+						//if true, no grail allowed
+						if($obj['subid'] >= 1000 && $obj['subid'] <= 1003) {
+							break;
+						}
+					}
 
-			case OBJECTS::RANDOM_DWELLING: //same as castle + level range
-			case OBJECTS::RANDOM_DWELLING_LVL: //same as castle, fixed level
-			case OBJECTS::RANDOM_DWELLING_FACTION: //level range, fixed faction
+					$grail['radius'] = $this->ReadUint32();
+					$obj['data'] = $grail;
+					break;
+
+				case OBJECTS::RANDOM_DWELLING: //same as castle + level range
+				case OBJECTS::RANDOM_DWELLING_LVL: //same as castle, fixed level
+				case OBJECTS::RANDOM_DWELLING_FACTION: //level range, fixed faction
 					$dwelling = array();
 					$dwelling['player'] = $this->ReadUint32();
 
@@ -2286,7 +2359,7 @@ class H3MAPSCAN {
 					$obj['data'] = $dwelling;
 					break;
 
-			case OBJECTS::QUEST_GUARD:
+				case OBJECTS::QUEST_GUARD:
 					$quest = $this->ReadQuest();
 
 					$this->quest_list[] = new ListObject('Quest Guard', $this->curcoor, $quest['Qtext'], '', '', '', $quest['uid']);
@@ -2294,13 +2367,13 @@ class H3MAPSCAN {
 					$obj['data'] = $quest;
 					break;
 
-			case OBJECTS::SHIPYARD:
+				case OBJECTS::SHIPYARD:
 					$shipyard['owner'] = $this->ReadUint32();
 					$obj['data'] = $shipyard;
 					$tileowner = $shipyard['owner'];
 					break;
 
-			case OBJECTS::HERO_PLACEHOLDER: //hero placeholder
+				case OBJECTS::HERO_PLACEHOLDER: //hero placeholder
 					$tileowner = $this->ReadUint8();
 					$placeholder['owner'] = $tileowner;
 					$placeholder['heroid'] = $this->ReadUint8(); //hero type id
@@ -2327,53 +2400,62 @@ class H3MAPSCAN {
 
 					break;
 
-			case OBJECTS::BORDERGUARD:
-			case OBJECTS::BORDER_GATE:
-			case OBJECTS::KEYMASTER:
-				break;
-
-			case OBJECTS::PYRAMID: //Pyramid of WoG object
-				break;
-
-			case OBJECTS::LIGHTHOUSE: //Lighthouse
-				$lighthouse['owner'] = $this->ReadUint32();
-				$tileowner = $lighthouse['owner'];
-
-				$obj['data'] = $lighthouse;
-				break;
-
-			//HOTA
-			case OBJECTS::CREATURE_BANK:
-			case OBJECTS::CRYPT:
-			case OBJECTS::SHIPWRECK:
-			case OBJECTS::DERELICT_SHIP:
-			case OBJECTS::DRAGON_UTOPIA:
-				if($this->hota_subrev >= $this::HOTA_SUBREV3) {
-					$bank = array();
-					$bank['variant'] = $this->ReadUint32();
-					$bank['upgraded'] = $this->ReadUint8();
-					$bank['artnum'] = $this->ReadUint32();
-					for($j = 0; $j < $bank['artnum']; $j++) {
-						$artid = $this->ReadUint32();
-						if($artid == 0xffffffff) {
-							$art = 'Random Artefact';
+				case OBJECTS::BORDER_GATE:
+					//HOTA quest gate
+					if($this->hota_subrev >= $this::HOTA_SUBREV3) {
+						if($obj['subid'] == 1000) {
+							$quest = $this->ReadQuest();
+							$this->quest_list[] = new ListObject('Quest Guard', $this->curcoor, $quest['Qtext'], '', '', '', $quest['uid']);
+							$obj['data'] = $quest;
 						}
-						else {
-							$art = $this->GetArtifactById($artid);
-						}
-						$bank['artefacts'][] = $art;
-						$this->artifacts_list[] = new ListObject($art, $this->curcoor, 'Creature bank');
 					}
-					$obj['data'] = $bank;
-				}
-				break;
+				case OBJECTS::BORDERGUARD:
+				case OBJECTS::KEYMASTER:
+					$this->keys_list[] = $obj;
+					break;
 
-			default:
-				//any other object, we dont want to save to array
-				//as a matter of fact, we save that only for debug purpose, the class object is not used anywhere since this
-				$saveobject = false;
-				break;
-		}
+				case OBJECTS::PYRAMID: //Pyramid of WoG object
+					break;
+
+				case OBJECTS::LIGHTHOUSE: //Lighthouse
+					$lighthouse['owner'] = $this->ReadUint32();
+					$tileowner = $lighthouse['owner'];
+
+					$obj['data'] = $lighthouse;
+					break;
+
+				//HOTA
+				case OBJECTS::CREATURE_BANK:
+				case OBJECTS::DERELICT_SHIP:
+				case OBJECTS::DRAGON_UTOPIA:
+				case OBJECTS::CRYPT:
+				case OBJECTS::SHIPWRECK:
+					if($this->hota_subrev >= $this::HOTA_SUBREV3) {
+						$bank = array();
+						$bank['variant'] = $this->ReadUint32();
+						$bank['upgraded'] = $this->ReadUint8();
+						$bank['artnum'] = $this->ReadUint32();
+						for($j = 0; $j < $bank['artnum']; $j++) {
+							$artid = $this->ReadUint32();
+							if($artid == 0xffffffff) {
+								$art = 'Random Artefact';
+							}
+							else {
+								$art = $this->GetArtifactById($artid);
+							}
+							$bank['artefacts'][] = $art;
+							$this->artifacts_list[] = new ListObject($art, $this->curcoor, 'Creature bank');
+						}
+						$obj['data'] = $bank;
+					}
+					break;
+
+				default:
+					//any other object, we dont want to save to array
+					//as a matter of fact, we save that only for debug purpose, the class object is not used anywhere since this
+					$saveobject = false;
+					break;
+			} //switch end
 
 			//object tiles
 			//if we dont build map, we dont need to save terrain access
@@ -2559,25 +2641,27 @@ class H3MAPSCAN {
 	private function ReadSeerHut() {
 		$hut = array();
 		$numquest = 1;
+		$qi = 0; //quest iterator
 
 		$hut['quest'][0]['taskid'] = QUESTMISSION::NONE;
 
 
 		if($this->version > $this::ROE) {
-			if($this->hota_subrev == $this::HOTA_SUBREV3) {
+			if($this->hota_subrev >= $this::HOTA_SUBREV3) {
 				$numquest = $this->ReadUint32(); //number of quests
 			}
 			for($i = 0; $i < $numquest; $i++) {
-				$hut['quest'][$i] = $this->ReadQuest();
-				$hut['quest'][$i]['task'] = FromArray($hut['quest'][$i]['taskid'], $this->CS->QuestMission);
+				$hut['quest'][$qi] = $this->ReadQuest();
+				$hut['quest'][$qi]['task'] = FromArray($hut['quest'][$qi]['taskid'], $this->CS->QuestMission);
+				$qi++;
 
-				//skip false reward when there is more quests
-				if($this->hota_subrev == $this::HOTA_SUBREV3 && ($i < $numquest - 1)) {
+				//quest terminator inbetween multiple quests
+				if($this->hota_subrev >= $this::HOTA_SUBREV3 && ($i < $numquest - 1)) {
 					$this->SkipBytes(1);
 				}
 			}
 		}
-		else {
+		else { //$qi is always 0
 			//RoE
 			$hut['quest'][0]['Qtext'] = '';
 			$hut['quest'][0]['uid'] = 0;
@@ -2594,68 +2678,37 @@ class H3MAPSCAN {
 			$hut['quest'][0]['task'] = FromArray($hut['quest'][0]['taskid'], $this->CS->QuestMission);
 		}
 
-		$hut['rewardid'] = $this->ReadUint8();
-		$hut['rewardType'] = FromArray($hut['rewardid'], $this->CS->RewardType);
-		$hut['id'] = '';
-		$hut['value'] = '';
+		$reward = $this->ReadReward();
+		$hut = array_merge($hut, $reward);
 
-		switch($hut['rewardid']) {
-			case REWARDTYPE::EXPERIENCE:
-				$hut['value'] = $this->ReadUint32();
-				break;
-			case REWARDTYPE::MANA_POINTS:
-				$hut['value'] = $this->ReadUint32();
-				break;
-			case REWARDTYPE::MORALE_BONUS:
-				$hut['value'] = $this->ReadUint8();
-				break;
-			case REWARDTYPE::LUCK_BONUS:
-				$hut['value'] = $this->ReadUint8();
-				break;
-			case REWARDTYPE::RESOURCES:
-				$hut['id'] = $this->GetResourceById($this->ReadUint8());
-				$hut['value'] = $this->ReadUint32() & 0x00ffffff;
-				break;
-			case REWARDTYPE::PRIMARY_SKILL:
-				$hut['id'] = $this->GetPriskillById($this->ReadUint8());
-				$hut['value'] = $this->ReadUint8();
-				break;
-			case REWARDTYPE::SECONDARY_SKILL:
-				$hut['id'] = $this->GetSecskillById($this->ReadUint8());
-				$hut['value'] = $this->GetSecskillLevelById($this->ReadUint8());
-				break;
-			case REWARDTYPE::ARTIFACT:
-				if ($this->version == $this::ROE) {
-					$hut['artid'] = $this->ReadUint8();
-				}
-				else {
-					$hut['artid'] = $this->ReadUint16();
-				}
-				$artifact = $this->GetArtifactById($hut['artid']);
-				$hut['value'] = $artifact;
+		if($this->hota_subrev >= $this::HOTA_SUBREV3) {
+			$numquest = $this->ReadUint32(); //number of multiple/cycled quests
 
-				$this->artifacts_list[] = new ListObject($artifact, $this->curcoor, 'Seer Hut');
-				break;
-			case REWARDTYPE::SPELL:
-				$hut['value'] = $this->GetSpellById($this->ReadUint8());
-				break;
-			case REWARDTYPE::CREATURE:
-				if($this->version > $this::ROE) {
-					$hut['id'] = $this->GetCreatureById($this->ReadUint16());
+			for($i = 0; $i < $numquest; $i++) {
+				$hut['quest'][$qi] = $this->ReadQuest();
+				$hut['quest'][$qi]['task'] = FromArray($hut['quest'][$qi]['taskid'], $this->CS->QuestMission);
+				$qi++;
+
+				//quest terminator inbetween multiple quests
+				if($this->hota_subrev >= $this::HOTA_SUBREV3 && ($i < $numquest - 1)) {
+					$this->SkipBytes(1);
 				}
-				else {
-					$hut['id'] = $this->GetCreatureById($this->ReadUint8());
-				}
-				$hut['value'] = $this->ReadUint16();
-				break;
+			}
+			//when there are cycled quests, reward is copied, but it's the same so just read it and dont save it
+			$this->ReadReward();
 		}
+
 		$this->SkipBytes(2);
-
-		if($this->hota_subrev == $this::HOTA_SUBREV3) {
-			$this->SkipBytes(4);
+		
+		$Qtext = '';
+		foreach ($hut['quest'] as $k => $hutquest) {
+			if($k > 0) {
+				$Qtext .= '<br />';
+			}
+			$Qtext .= $hutquest['Qtext'];
 		}
 
-		$this->quest_list[] = new ListObject('Seer\'s Hut', $this->curcoor, $hut['quest'][0]['Qtext'], $hut['rewardType'], $hut['value'], $hut['id'], $hut['quest'][0]['uid']);
+		$this->quest_list[] = new ListObject('Seer\'s Hut', $this->curcoor, $Qtext, $hut['rewardType'], $hut['value'], $hut['id'], $hut['quest'][0]['uid']);
 
 		return $hut;
 	}
@@ -2729,13 +2782,29 @@ class H3MAPSCAN {
 				$quest['Qplayer'] = $this->ReadUint8();
 				$quest['Qtext'] = 'Be player: '.$this->GetPlayerColorById($quest['Qplayer']);
 				break;
-			case QUESTMISSION::HOTA_EXTRA:
-				$hotaquestid = $this->ReadUint32();
-				if($hotaquestid == QUESTMISSION::HOTA_CLASS) {
-					$this->SkipBytes(7);
-				}
-				elseif($hotaquestid == QUESTMISSION::HOTA_NOTBEFORE) {
-					$quest['ReturnAfter'] = $this->ReadUint32();
+			case QUESTMISSION::HOTA_EXTRA: 
+				if($this->hota_subrev >= $this::HOTA_SUBREV3) {
+					$hotaquestid = $this->ReadUint32();
+					if($hotaquestid == QUESTMISSION::HOTA_CLASS) {
+						$class_count = $this->ReadUint32();
+						if ($class_count > 0) {
+							$class_avail = (int)ceil($class_count / 8);
+							$class = array();
+							for ($x = 0; $x < $class_avail; $x++) {
+								$classmask = $this->ReadUint8();
+								for ($c = 0; $c < 8; $c++) {
+									if(($classmask >> $c) & 0x01) {
+										$class[] = $this->GetHeroClassById($x * 8 + $c);
+									}
+								}
+							}
+							$quest['Qtext'] = 'Be class: '.implode($class, ', ');
+						}
+					}
+					elseif($hotaquestid == QUESTMISSION::HOTA_NOTBEFORE) {
+						$quest['ReturnAfter'] = $this->ReadUint32();
+						$quest['Qtext'] = 'Return after '.$quest['ReturnAfter'].' days';
+					}
 				}
 				break;
 		}
@@ -2753,6 +2822,66 @@ class H3MAPSCAN {
 		$quest['textDone'] = $this->ReadString();
 
 		return $quest;
+	}
+	
+	private function ReadReward() {
+		$reward['rewardid'] = $this->ReadUint8();
+		$reward['rewardType'] = FromArray($reward['rewardid'], $this->CS->RewardType);
+		$reward['id'] = '';
+		$reward['value'] = '';
+
+		switch($reward['rewardid']) {
+			case REWARDTYPE::EXPERIENCE:
+				$reward['value'] = $this->ReadUint32();
+				break;
+			case REWARDTYPE::MANA_POINTS:
+				$reward['value'] = $this->ReadUint32();
+				break;
+			case REWARDTYPE::MORALE_BONUS:
+				$reward['value'] = $this->ReadUint8();
+				break;
+			case REWARDTYPE::LUCK_BONUS:
+				$reward['value'] = $this->ReadUint8();
+				break;
+			case REWARDTYPE::RESOURCES:
+				$reward['id'] = $this->GetResourceById($this->ReadUint8());
+				$reward['value'] = $this->ReadUint32() & 0x00ffffff;
+				break;
+			case REWARDTYPE::PRIMARY_SKILL:
+				$reward['id'] = $this->GetPriskillById($this->ReadUint8());
+				$reward['value'] = $this->ReadUint8();
+				break;
+			case REWARDTYPE::SECONDARY_SKILL:
+				$reward['id'] = $this->GetSecskillById($this->ReadUint8());
+				$reward['value'] = $this->GetSecskillLevelById($this->ReadUint8());
+				break;
+			case REWARDTYPE::ARTIFACT:
+				if ($this->version == $this::ROE) {
+					$reward['artid'] = $this->ReadUint8();
+				}
+				else {
+					$reward['artid'] = $this->ReadUint16();
+				}
+				$artifact = $this->GetArtifactById($reward['artid']);
+				$reward['value'] = $artifact;
+
+				$this->artifacts_list[] = new ListObject($artifact, $this->curcoor, 'Seer Hut');
+				break;
+			case REWARDTYPE::SPELL:
+				$reward['value'] = $this->GetSpellById($this->ReadUint8());
+				break;
+			case REWARDTYPE::CREATURE:
+				if($this->version > $this::ROE) {
+					$reward['id'] = $this->GetCreatureById($this->ReadUint16());
+				}
+				else {
+					$reward['id'] = $this->GetCreatureById($this->ReadUint8());
+				}
+				$reward['value'] = $this->ReadUint16();
+				break;
+		}
+		
+		return $reward;
 	}
 
 	private function ReadEvents() {
@@ -2773,9 +2902,9 @@ class H3MAPSCAN {
 			}
 			$event['aiAble']= $this->ReadUint8();
 			$event['first']= $this->ReadUint16() + 1;
-			$event['interval']= $this->ReadUint8();
+			$event['interval']= $this->ReadUint16();
 
-			$this->SkipBytes(17);
+			$this->SkipBytes(16);
 
 			$this->events[] = $event;
 		}
@@ -2891,6 +3020,10 @@ class H3MAPSCAN {
 		}
 		return $out;
 	}
+	
+	public function SetAuthor($author) {
+		$this->author = $author;
+	}
 
 	private function GetVersionName() {
 		switch($this->version) {
@@ -2971,6 +3104,14 @@ class H3MAPSCAN {
 		}
 	}
 
+	public function GetMapVersion() {
+		return $this->versionname;
+	}
+
+	public function GetMapSubVersion() {
+		return $this->subversion;
+	}
+
 	private function PlayerColors($playermask, $withtext = false) {
 		$colors = '';
 		$playermask &= $this->playerMask; //consider only allowed players
@@ -2978,7 +3119,7 @@ class H3MAPSCAN {
 			if(($playermask & (1 << $i)) != 0) {
 				$colors .= '<span class="color'.($i + 1).'">&nbsp;</span>&nbsp;';
 				if($withtext) {
-					$colors .= FromArray($i, $this->CS->PlayersColours).'<br />';
+					$colors .= FromArray($i, $this->CS->PlayersColors).'<br />';
 				}
 			}
 		}
@@ -2990,7 +3131,7 @@ class H3MAPSCAN {
 		if($withcolor && ($id >= 0 && $id <= 7 || $id == 255)) {
 			$color .= '<span class="color'.($id + 1).'">&nbsp;</span>&nbsp;';
 		}
-		return $color.FromArray($id, $this->CS->PlayersColours);
+		return $color.FromArray($id, $this->CS->PlayersColors);
 	}
 
 	private function GetArtifactById($artid) {
@@ -3094,7 +3235,7 @@ class H3MAPSCAN {
 	}
 
 
-	public function ObjectsShow() {
+	/*public function ObjectsShow() {
 
 		$valido = array(
 			OBJECTS::ABANDONED_MINE,
@@ -3165,7 +3306,7 @@ class H3MAPSCAN {
 			/*if(!array_key_exists($o['data']['name'], $mons)) {
 				$mons[$o['data']['name']] = 0;
 			}
-			$mons[$o['data']['name']]++;*/
+			$mons[$o['data']['name']]++;* /
 		}
 		//ksort($mines);
 		//ksort($mons);
@@ -3179,7 +3320,7 @@ class H3MAPSCAN {
 		foreach($mobs as $mo) {
 			echo $mo;
 		}
-	}
+	}*/
 
 	//check, if map is compressed or not, compressed starts with 1F 8B 08 00 in LE, that's 0x00088B1F
 	private function IsGZIP() {
@@ -3432,7 +3573,7 @@ class MapCell {
 	//public $mirror;       //sprite mirror
 	public $access;       //accessibility
 	public $owner;        //is object on tile owned -> owner id
-	public $special;      //display some object on map with special colour
+	public $special;      //display some object on map with special color
 }
 
 class MapCoords {

@@ -3,8 +3,8 @@
 *.h3m
 /map_compare.php
 /dev
-/maps/*.h3c
-/maps/*.tut
+/maps/*
+/maps/*.*
 /fun/access.php
 /css/*.gif
 /index.php
@@ -12,6 +12,8 @@
 /css/back/*.gif
 /maps/extradir_hpn/300 Spartans/Data/300/*.jpg
 /mapscam/*.h3c
+/mapsinfo/*
+/mapsinfo/*.*
 *.h3c
 extradir_hpn
 extradir_map4heroes

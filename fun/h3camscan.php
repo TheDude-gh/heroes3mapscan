@@ -1,32 +1,35 @@
 <?php
 
-const CAMDIR = './mapscam/';
-const CAMDIRGZ = CAMDIR.'./gzip/';
-const CAMDIREXP = CAMDIR.'./exp/';
-
 const CAMROE = 4;
-const CAMAB = 5;
+const CAMAB  = 5;
 const CAMSOD = 6;
 const CAMWOG = 6;
 
+const H3C_PRINTINFO   = 0x0001; //prints cam info, requires webmode
+const H3C_SAVECAMDB   = 0x0002; //saves cam info to DB
+const H3C_EXPORTMAPS  = 0x0004; //export maps
+const H3C_CAMHTMCACHE = 0x0008; //save printinfo htm file, requires printinfo
+
 class H3CAMSCAN {
-	const IMGSIZE = 576;
 	const ROE  = 0x0e;
 	const AB   = 0x15;
 	const SOD  = 0x1c;
 	const WOG  = 0x33;
 	const HOTA = 0x20;
 
-	private $version = '';
+	private $camversion = 0; //cam version
+	private $mapsversion = 0; //maps version, this value is save to DB
 	private $versionname = '';
 	private $cam_name = '';
 	private $description = '';
+	private $language = null; 
 
 
 	//CAM
-	private $mapversion = 0;
+	private $mapversion = 0; //campaign map version, determines h3c layout
 	private $diffchoice = 0;
-	private $mapscount = 0;
+	private $mapscount = 0; //map count based on h3c layout
+	private $mapscountreal = 0; //real map count of imported maps
 	private $scenarios = array();
 
 	private $name = '';
@@ -45,6 +48,11 @@ class H3CAMSCAN {
 	private $CC; //heroes campaign constants class
 	private $CS; //heroes constants class
 	private $SC; //String Convert
+	
+	private $printoutput = false; //print info
+	private $save = false; //save to db
+	private $exportmaps = false; //esport maps
+	private $htmcache = false; //cache htm printinfo
 
 	private $pos = 0;
 	private $length = 0;
@@ -55,6 +63,9 @@ class H3CAMSCAN {
 	private $filesizeU = 0;
 	private $filebad = false;
 	public $readok = false;
+
+	private $md5hash = '';
+
 	private $onlyunzip = false;
 	private $saveH3M = false;
 
@@ -68,15 +79,20 @@ class H3CAMSCAN {
 	// 8-8 9-4 10-4 11-4 12-3 13-4  27
 	// 14-4 15-4 16-4 17-5 18-4 19-12 20-4  37
 
-	public function __construct($mapfile, $onlyunzip = false) {
+	public function __construct($mapfile, $modes) {
+		$this->saveH3M = true;
 
 		$this->mapfile = $mapfile;
-		$this->onlyunzip = $onlyunzip;
+		
+		$this->printoutput = ($modes & H3C_PRINTINFO);
+		$this->save        = ($modes & H3C_SAVECAMDB);
+		$this->exportmaps  = ($modes & H3C_EXPORTMAPS);
+		$this->htmcache    = ($modes & H3C_CAMHTMCACHE);
 
 		$path = pathinfo($this->mapfile);
 		$this->mapfileinfo = $path;
 
-		$this->mapfileout = CAMDIREXP.$path['filename'].'.'.$path['extension'];
+		$this->mapfileout = MAPDIRCAMEXP.$path['filename'].'.'.$path['extension'];
 
 		$h3mfile_exists = file_exists($this->mapfile); //original compressed map
 		$h3mfileun_exists = file_exists($this->mapfileout); //uncompressed map
@@ -97,53 +113,46 @@ class H3CAMSCAN {
 
 		$this->GzipSplit();
 
-		/*if(!$h3mfileun_exists || filemtime($this->mapfileout) < filemtime($this->mapfile)) {
-			$this->Ungzip();
-			if($this->mapdata === '') {
-				echo $this->mapfile.' could not be uncompressed'.ENVE;
-				return;
-			}
-
-			if($this->onlyunzip) {
-				$this->filebad = true;
-				return;
-			}
-
-			file_write($this->mapfileout, $this->mapdata);
-		}
-
-		if(!file_exists($this->mapfileout)) {
-			echo $this->mapfileout.' does not exists!'.ENVE;
-			$this->filebad = true;
-			return;
-		}
-
 		$this->filesizeC = filesize($this->mapfile);
-		$this->filesizeU = filesize($this->mapfileout);
 		$this->filemtime = filemtime($this->mapfile);
-		$this->filectime = filectime($this->mapfile);*/
+		$this->filectime = filectime($this->mapfile);
 
-		/*if($this->mapdata == '') {
-			$this->mapdata = file_get_contents($this->mapfileout);
-		}*/
 		$this->length = strlen($this->mapdata);
 
 		$this->mapfile = $path['basename']; //cut folder path, no needed from here
 	}
+	
+	private function SaveCam() {
 
-	//check, if map is compressed or not, compressed starts with 1F 8B 08 00
-	private function IsGZIP() {
-		$fh = fopen($this->mapfile, 'r');
-		$buffer = fgets($fh, 5);
-		fclose($fh);
-		$buffer = unpack('Lhead', $buffer);
-		if(dechex($buffer['head'] & 0xffffff) == '88b1f') {
-			$this->isGzip = true;
+		$mapfile = mes($this->mapfile);
+
+		$sql = "SELECT m.mapfile FROM heroes3_maps AS m WHERE m.mapfile='$mapfile' AND md5='".$this->md5hash."'";
+		$mapdb = mgr($sql);
+		if($mapdb) {
+			return;
 		}
-		else {
-			$this->isGzip = false;
+
+		$this->mapimage = sanity_string($this->mapfilename);
+
+		$mapdir = mes($this->mapfileinfo['dirname']);
+		$camname = mes($this->cam_name);
+		$camdesc = mes($this->description);
+
+		$sql = "INSERT INTO heroes3_maps (heroes, campaign, id_campaign, `mapfile`, `mapdir`, `mapname`, `author`, `language`, `mapdesc`, `version`, `subversion`,
+			`size`, `sizename`, `levels`, `diff`, `diffname`,
+			`playersnum`, `playhuman`, `playai`, `teamnum`, `victory`, `loss`, `filecreate`, `filechanged`, `filesizeC`, `filesizeU`,
+			`mapimage`, `md5`) VALUES
+			(3, 1, 0, '$mapfile', '$mapdir/', '$camname', '', '".$this->language."', '$camdesc', '".$this->mapsversion."', 0,
+				".$this->mapscountreal.", '', ".$this->mapversion.", '".$this->diffchoice."', '',
+				0, 0, 0,
+				0, 0, 0,
+			FROM_UNIXTIME(".$this->filectime."), FROM_UNIXTIME(".$this->filemtime."), ".$this->filesizeC.", 0, '', '".$this->md5hash."')";
+		
+		
+		$m = mq($sql);
+		if(!$m) {
+			file_append('sql.log', $sql.EOL.EOL);
 		}
-		return $this->isGzip;
 	}
 
 	public function ReadCam() {
@@ -154,31 +163,34 @@ class H3CAMSCAN {
 		$this->pos = 0;
 		$this->CC = new CampaignConstants();
 		$this->CS = new HeroesConstants();
-		$this->SC = new StringConvert();
+		//$this->SC = new StringConvert();
 
 
-
-		$this->version = $this->ReadUint32();
-		$this->mapversion = $this->ReadUint8() - 1;
+		$this->camversion = $this->ReadUint32();
+		$this->mapversion = $this->ReadUint8();
 		$this->cam_name = $this->ReadString();
+		
+		//reset language which was set bases on mapname and let base it on description, which is usually longer
+		$this->language = null;
+		
 		$this->description = $this->ReadString();
 
-		if($this->version > CAMROE) {
+		if($this->camversion > CAMROE) {
 			$this->diffchoice = $this->ReadUint8();
 		}
 
 		$music = $this->ReadUint8();
 
 
-		//$map_count = something($this->mapversion);
-		$this->mapscount = $this->ScenarioCount[$this->mapversion]; //minumum is 3 anyway
-		//$this->mapscount = 8;
+		$this->mapscount = $this->ScenarioCount[$this->mapversion - 1]; //array start with 0, reduct by 1
+		
 
-
-		echo 'Campaign name: '.$this->cam_name.'<br />
-			Version: '.$this->version.'<br />
-			Cam type: '.$this->mapversion.'<br />
-			Map Count: '.$this->mapscount.'<br />';
+		if($this->printoutput) {
+			echo 'Campaign name: '.$this->cam_name.'<br />
+				Version: '.$this->camversion.'<br />
+				Cam type: '.$this->mapversion.'<br />
+				Map Count: '.$this->mapscount.'<br />';
+			}
 
 		for ($i = 0; $i < $this->mapscount; $i++) {
 			$this->scenarios[$i] = $this->ReadScenario();
@@ -189,38 +201,19 @@ class H3CAMSCAN {
 		$maps = [];
 		for ($i = 0; $i < $this->mapscount; $i++) {
 
-			echo $this->scenarios[$i]->mapname.' '.$this->scenarios[$i]->size.'<br />';
-
+			if($this->printoutput) {
+				echo $this->scenarios[$i]->mapname.' '.$this->scenarios[$i]->size.'<br />';
+			}
+			
 			if($this->scenarios[$i]->size == 0) {
 				continue;
 			}
 
 			$totalsize += $this->scenarios[$i]->size;
 			$maps[$this->scenarios[$i]->mapname] = $this->scenarios[$i]->size;
+			$this->mapscountreal++;
 		}
-
-
-		/*
-		//extract compressed maps
-		echo '<br /><br />';
-		if(!file_exists(CAMDIRIMG.$this->cam_name)) {
-			mkdir(CAMDIRIMG.$this->cam_name);
-		}
-		$undata = file_get_contents(CAMDIR.$this->mapfile);
-		$mapoffset = strlen($undata) - $totalsize;
-		$curpos = $mapoffset;
-
-		foreach ($maps as $name => $size) {
-			file_write(CAMDIRIMG.$this->cam_name.'/'.$name, substr($undata, $curpos, $size));
-			$curpos += $size;
-
-			echo "$name -> $curpos, $size<br />";
-			$this->pvar($curpos);
-		}*/
-
-		//$this->ppos();
-		//vd($totalsize);
-
+		
 		//show
 		$this->mapdata = null;
 		//vd($this);
@@ -234,7 +227,7 @@ class H3CAMSCAN {
 		$map->size = $this->ReadUint32(); //packed size
 
 
-		if($this->mapversion == 18) { //unholly alliance
+		if($this->mapversion == 19) { //unholly alliance
 			$precond = $this->ReadUint16();
 		}
 		else {
@@ -269,7 +262,7 @@ class H3CAMSCAN {
 
 		$herokeep = $this->ReadUint8();
 		$this->SkipBytes(19); //monster bits
-		if($this->version < CAMSOD) {
+		if($this->camversion < CAMSOD) {
 			$this->SkipBytes(18 - 1); //artifacts bits
 		}
 		else {
@@ -405,23 +398,52 @@ class H3CAMSCAN {
 		if($this->filebad) {
 			return;
 		}
+		
+		$makehtm = $this->printoutput || $this->htmcache;
+		
+		$printinfo = '';
 
-		echo '<table>
-			<tr>
-				<th>Map File</th>
-				<th>Version</th>
-				<th>Map Name</th>
-				<th style="width:500px;">Description</th>
-				<th>Map Size</th>
-				<th>Levels</th>
-				<th>Players</th>
-				<th>Teams</th>
-				<th>Level Cap</th>
-				<th>Victory</th>
-				<th>Loss</th>
-				<th>Bonus</th>
-			</tr>';
+		if($makehtm) {
+			$printinfo .= '<table>
+				<tr>
+					<th>Map File</th>
+					<th>Version</th>
+					<th>Map Name</th>
+					<th style="width:500px;">Description</th>
+					<th>Map Size</th>
+					<th>Levels</th>
+					<th>Players</th>
+					<th>Teams</th>
+					<th>Level Cap</th>
+					<th>Victory</th>
+					<th>Loss</th>
+					<th>Bonus</th>
+				</tr>';
+		}
+			
+
 		$scenario_num = 0;
+
+		if($this->exportmaps) {
+		  $camdir = MAPDIRCAMEXP.sanity_string($this->cam_name).'/';
+			if(!file_exists($camdir)) {
+				mkdir($camdir);
+			}
+			foreach ($this->gzipparts as $k => $part) {
+				if($k == 0) {
+					continue;
+				}
+				$mapname = $this->scenarios[$k - 1]->mapname;
+				if($mapname == '') {
+					continue;
+				}
+				//echo "$k : $mapname - ".strlen($part).'<br />';
+				file_write($camdir.$mapname, $part);
+			}
+		}
+		
+		//echo '<br /><br /> MAPS<br />';
+		
 		for ($i = 1; $i < $this->gzipcount; $i++) {
 
 			while($this->scenarios[$scenario_num]->size == 0) {
@@ -429,33 +451,52 @@ class H3CAMSCAN {
 			}
 
 			$mapfile = $this->scenarios[$scenario_num]->mapname; //not good
-			$bonus = $this->scenarios[$scenario_num]->bonus;
-			$scenario_num++;
-			$bonuses = '';
 
-			for ($b = 0; $b < $bonus['num']; $b++) {
-				if($b > 0) {
-					$bonuses .= '<br />';
-				}
-				$bonuses .= $this->GetCamBonusById($bonus[$b]['type']).' - '.$bonus[$b]['text'];
-			}
-			//vd($bonus);
-
-			$map = new H3MAPSCAN($mapfile, false, true, gzdecode($this->gzipparts[$i]));
-			$map->PrintStateSet(true, false);
+			$map = new H3MAPSCAN($mapfile, H3M_WEBMODE | H3M_BASICONLY, gzdecode($this->gzipparts[$i]));
 			$map->ReadMap();
 			$headerInfo = $map->MapHeaderInfo();
 
-			//vd($headerInfo);
+			$this->mapsversion = $map->GetMapVersion();
+			
+			if($makehtm) {
+				$bonus = $this->scenarios[$scenario_num]->bonus;
+				$scenario_num++;
+				$bonuses = '';
 
-			echo '<tr>';
-			foreach($headerInfo as $hi) {
-				echo '<td>'.$hi.'</td>';
+				for ($b = 0; $b < $bonus['num']; $b++) {
+					if($b > 0) {
+						$bonuses .= '<br />';
+					}
+					$bonuses .= $this->GetCamBonusById($bonus[$b]['type']).' - '.$bonus[$b]['text'];
+				}
+
+				//echo $mapfile.' - '.$i.' '.strlen($this->gzipparts[$i]).'<br />';
+			
+				$printinfo .= '<tr>';
+				foreach($headerInfo as $hi) {
+					$printinfo .= '<td>'.$hi.'</td>';
+				}
+				$printinfo .= '<td>'.$bonuses.'</td>';
+				$printinfo .= '</tr>';
 			}
-			echo '<td>'.$bonuses.'</td>';
-			echo '</tr>';
 		}
-		echo '</table>';
+		
+		if($makehtm) {
+			$printinfo .= '</table>';
+		}
+		
+		if($this->printoutput) {
+			echo $printinfo;
+		}
+
+		if($this->htmcache) {
+			file_write(MAPDIRINFO.str_ireplace('.h3c', '.htm', $this->mapfile).'.gz', gzencode($printinfo));
+		}
+		
+		
+		if($this->save) {
+			$this->SaveCam();
+		}
 	}
 
 
@@ -468,7 +509,8 @@ class H3CAMSCAN {
 	}
 
 	private function GetCreatureById($monid) {
-		if($this->version == $this::HOTA && $monid >= HOTAMONSTERIDS) {
+		//$this->mapversions == $this::HOTA &&
+		if($monid >= HOTAMONSTERIDS) {
 			return FromArray($monid, $this->CS->MonsterHota);
 		}
 		return FromArray($monid, $this->CS->Monster);
@@ -505,7 +547,41 @@ class H3CAMSCAN {
 	private function GetSecskillLevelById($id) {
 		return FromArray($id, $this->CS->SecSkillLevel);
 	}
+	
+	//check, if map is compressed or not, compressed starts with 1F 8B 08 00 in LE, that's 0x00088B1F
+	private function IsGZIP() {
+		$file = fopen($this->mapfile, 'rb');
 
+		//get file header to check if it is gzip
+		$gzipheader = fread($file, 4);
+
+		//if gzip, last 4 bytes are incompressed size
+		fseek($file, -4, SEEK_END);
+		$gzipend = fread($file, 4);
+		fclose($file);
+
+		$header = unpack('V', $gzipheader); //ulong 32 bit LE
+		$header = end($header);
+		if($header == 0x00088b1f) {
+			$this->isGzip = true;
+		}
+		else {
+			$this->isGzip = false;
+		}
+
+		//check only when gzip file
+		if($this->isGzip) {
+			$uncompressedSize = unpack('V', $gzipend);
+			$uncompressedSize = end($uncompressedSize);
+			//check size, we will presume no map is bigger than 10 MB, bigger size means gzip file is corrupt
+			if($uncompressedSize > 10485760) {
+				echo 'H3C file seems to be corrupted. Bad unpacked size<br />';
+				$this->filebad = true;
+			}
+		}
+		return $this->isGzip;
+	}
+	
 	private function GzipSplit() {
 		//campaign files are several gzipped files together, split them first
 		//first is campaign header, rest are maps
@@ -515,6 +591,8 @@ class H3CAMSCAN {
 		$this->gzipparts = array('');
 
 		$gzfile = file_get_contents($this->mapfile);
+
+		$this->md5hash = md5($gzfile);
 
 		$pos = 0;
 		$length = strlen($gzfile);
@@ -535,73 +613,7 @@ class H3CAMSCAN {
 
 		$this->gzipcount = $g;
 
-		//$this->mapdata = gzuncompress($this->gzipparts[0]);
 		$this->mapdata = gzdecode($this->gzipparts[0]);
-
-		/*$buffer_size = 1024;
-		$gzfile = fopen($this->mapfile, "rb");
-		$first = true;
-
-		while(!feof($gzfile)) {
-			$gzpart = fread($gzfile, $buffer_size);
-
-			$gzmarkpos = strpos($gzpart, $gzmark);
-			if(!$first && $gzmarkpos !== false) {
-				vd($gzmarkpos);
-				$this->gzipparts[$g] .= substr($gzpart, 0, $gzmarkpos);
-				$g++;
-				$this->gzipparts[$g] = substr($gzpart, $gzmarkpos);
-			}
-			else {
-				$this->gzipparts[$g] .= $gzpart;
-				$first = false;
-			}
-		}
-		$this->gzipcount = $g + 1;
-		fclose($gzfile);*/
-
-		//vd($this->gzipcount);
-
-		//save map files
-		if($this->saveH3M) {
-			foreach ($this->gzipparts as $k => $part) {
-				echo "$k : ".strlen($part).'<br />';
-				file_write(CAMDIRGZ.$k.'.h3m', $part);
-			}
-		}
-	}
-
-	private function Ungzip() {
-		// Raising this value may increase performance
-		$buffer_size = 4096; // read 4 kB at a time
-
-		//get uncompressed size from gzip
-		$hfile = fopen($this->mapfile, "rb");
-		fseek($hfile, -4, SEEK_END);
-		$buf = fread($hfile, 4);
-		$unpacked = unpack("V", $buf);
-		$uncompressedSize = end($unpacked);
-		fclose($hfile);
-
-		//check size, we will presume no map is bigger than 10 MB, bigger size means gzip file is corrupt
-		if($uncompressedSize > 10485760) {
-			echo 'H3M file seems to be corrupted<br />';
-			$this->filebad = true;
-			return;
-		}
-
-		// Open our files (in binary mode)
-		$gzfile = gzopen($this->mapfile, 'rb');
-
-		// Keep repeating until the end of the input file
-		while(!gzeof($gzfile)) {
-			// Read buffer-size bytes
-			// Both fwrite and gzread and binary-safe
-			$this->mapdata .= gzread($gzfile, $buffer_size);
-		}
-
-		// Files are done, close files
-		gzclose($gzfile);
 	}
 
 	private function ReadUint8(){
@@ -646,7 +658,6 @@ class H3CAMSCAN {
 		if($this->pos >= $this->length || $this->pos < 0){
 			dbglog();
 			$this->mapdata = null;
-			$this->terrain = null;
 			$this->CC = null;
 			//vd($this);
 			die('Bad string pos '.$this->pos);
@@ -659,9 +670,7 @@ class H3CAMSCAN {
 			if($length > 100000 || $length < 0) {
 				dbglog();
 				$this->mapdata = null;
-				$this->terrain = null;
 				$this->CC = null;
-				$this->objTemplates = null;
 				//vd($this->objects);
 				vd($this);
 				//rename(CAMDIR.$this->mapfile, 'mapsx/'.$this->mapfile);
@@ -670,22 +679,13 @@ class H3CAMSCAN {
 			}
 			$res = substr($this->mapdata, $this->pos, $length);
 			$this->pos += $length;
-
-			//return $res;
-			return $this->SC->Convert($res);
 		}
 		elseif($length > 0){
 			$res = substr($this->mapdata, $this->pos, $length);
 			$this->pos += $length;
 		}
-		/*else {
-			return;
-			while(ord($this->mapdata[$this->pos]) != 0) {
-				$res .= $this->mapdata[$this->pos++];
-			}
-			$this->pos++; // advance pointer after finding the 0
-		}*/
-		return $this->SC->Convert($res);
+		
+		return $this->LangConvert($res);
 	}
 
 	private function SkipBytes($bytes = 31){
@@ -698,6 +698,61 @@ class H3CAMSCAN {
 
 	private function GetPos(){
 		return $this->pos;
+	}
+	
+	private function LangConvert($text) {
+		if($this->language == null) {
+			$this->GuessLanguage($text);
+			//echo EOL.'['.$this->language.']'.EOL;
+		}
+
+		switch ($this->language) {
+			case 'cz': return @iconv('WINDOWS-1250', 'UTF-8', $text); //middle/eastern europe
+			case 'ru': return @iconv('WINDOWS-1251', 'UTF-8', $text); //russian
+			case 'cn': return @iconv('GB2312', 'UTF-8', $text); //chinese
+			case 'en':
+			default: return @iconv('WINDOWS-1250', 'UTF-8', $text);
+		}
+	}
+
+	private function GuessLanguage($text) {
+		$langpatterns = array(
+			//chinese
+			'cn' => array(
+				chr(0xb7).chr(0xfc), chr(0xb5).chr(0xd8), chr(0xc4).chr(0xa7), chr(0xbe).chr(0xed), chr(0xcd).chr(0xc1), chr(0xd6).chr(0xd8), chr(0xc0).chr(0xb4),
+				chr(0xa3).chr(0xac), chr(0xba).chr(0xda), chr(0xca).chr(0xd6), chr(0xd2).chr(0xd1), chr(0xbe).chr(0xad), chr(0xc9).chr(0xec), chr(0xcf).chr(0xf2),
+				chr(0xc1).chr(0xcb), chr(0xbb).chr(0xf4), chr(0xb8).chr(0xf1), chr(0xce).chr(0xd6), chr(0xb4).chr(0xc4), chr(0xa1).chr(0xa3), chr(0xb9).chr(0xfe),
+				chr(0xc0).chr(0xfb), chr(0xa1).chr(0xa4), chr(0xb2).chr(0xa8), chr(0xcc).chr(0xd8), chr(0xa3).chr(0xac), chr(0xc3).chr(0xfc), chr(0xb6).chr(0xa8),
+				chr(0xb5).chr(0xc4), chr(0xb7).chr(0xb4), chr(0xbf).chr(0xb9), chr(0xd6).chr(0xae), chr(0xc8).chr(0xcb), chr(0xa3).chr(0xac), chr(0xbc).chr(0xb4),
+				chr(0xbd).chr(0xab), chr(0xcc).chr(0xa4), chr(0xc9).chr(0xcf), chr(0xcb).chr(0xfb), chr(0xd2).chr(0xbb), chr(0xb8).chr(0xf6), chr(0xc8).chr(0xcb),
+				chr(0xb5).chr(0xc4), chr(0xd5).chr(0xf7), chr(0xb3).chr(0xcc), chr(0xa1).chr(0xa3), chr(0xc7).chr(0xb0), chr(0xcd).chr(0xbe), chr(0xc2).chr(0xfe),
+				chr(0xc2).chr(0xfe), chr(0xa3).chr(0xac), chr(0xca).chr(0xc7), chr(0xb8).chr(0xf6), chr(0xc8).chr(0xcb), chr(0xbe).chr(0xcd), chr(0xbb).chr(0xe1),
+				chr(0xc3).chr(0xd4), chr(0xc3).chr(0xa3), chr(0xb5).chr(0xf8), chr(0xb5).chr(0xb9), chr(0xc1).chr(0xcb), chr(0xb1).chr(0xf0), chr(0xba).chr(0xa6),
+				chr(0xc5).chr(0xc2), chr(0xa3).chr(0xac), chr(0xc5).chr(0xc4), chr(0xc5).chr(0xc4), chr(0xcd).chr(0xc1), chr(0xd5).chr(0xbe), chr(0xc6).chr(0xf0)
+			),
+			//russian
+			'ru' => array(
+				chr(0xc0), chr(0xc5), chr(0xc7), chr(0xce), chr(0xd0), chr(0xd3), chr(0xde), chr(0xdf),
+				chr(0xe0), chr(0xe5), chr(0xe7), chr(0xee), chr(0xf0), chr(0xf3), chr(0xfe), chr(0xff)
+			),
+			//czech
+			'cz' => array(
+				chr(0x8a), chr(0x8e), chr(0xc8), chr(0xc9), chr(0xcc), chr(0xd8), chr(0xd9),
+				chr(0x9a), chr(0x9e), chr(0xe8), chr(0xe9), chr(0xec), chr(0xf8), chr(0xf9)
+			),
+		);
+
+		foreach($langpatterns as $lang => $chars) {
+			foreach($chars as $ch) {
+				if(strstr($text, $ch) !== false) {
+					$this->language = $lang;
+					return;
+				}
+			}
+		}
+
+		//default
+		$this->language = 'en';
 	}
 
 	//print current position

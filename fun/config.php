@@ -16,6 +16,9 @@
 	//folder with campaigns
 	DEFINE('MAPDIRCAM', './mapscam/');
 
+	//folder with campaigns maps
+	DEFINE('MAPDIRCAMEXP', './mapscam/exp/');
+
 	//folder with cached map info
 	DEFINE('MAPDIRINFO', './mapsinfo/');
 
