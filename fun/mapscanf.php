@@ -2498,7 +2498,7 @@ class H3MAPSCAN {
 					}
 				}
 			}
-
+			
 			if($saveobject) {
 				$this->objects[] = $obj;
 			}
@@ -2655,10 +2655,9 @@ class H3MAPSCAN {
 				$hut['quest'][$qi]['task'] = FromArray($hut['quest'][$qi]['taskid'], $this->CS->QuestMission);
 				$qi++;
 
-				//quest terminator inbetween multiple quests
-				if($this->hota_subrev >= $this::HOTA_SUBREV3 && ($i < $numquest - 1)) {
-					$this->SkipBytes(1);
-				}
+				//reward for each quest
+				$reward = $this->ReadReward();
+				$hut = array_merge($hut, $reward);
 			}
 		}
 		else { //$qi is always 0
@@ -2676,26 +2675,25 @@ class H3MAPSCAN {
 			}
 			$hut['quest'][0]['timeout'] = OBJECT_INVALID; //no timeout
 			$hut['quest'][0]['task'] = FromArray($hut['quest'][0]['taskid'], $this->CS->QuestMission);
+
+			$reward = $this->ReadReward();
+			$hut = array_merge($hut, $reward);
 		}
 
-		$reward = $this->ReadReward();
-		$hut = array_merge($hut, $reward);
-
+		//HOTA extra
 		if($this->hota_subrev >= $this::HOTA_SUBREV3) {
 			$numquest = $this->ReadUint32(); //number of multiple/cycled quests
 
-			for($i = 0; $i < $numquest; $i++) {
-				$hut['quest'][$qi] = $this->ReadQuest();
-				$hut['quest'][$qi]['task'] = FromArray($hut['quest'][$qi]['taskid'], $this->CS->QuestMission);
-				$qi++;
+			if($numquest > 0) {
+				for($i = 0; $i < $numquest; $i++) {
+					$hut['quest'][$qi] = $this->ReadQuest();
+					$hut['quest'][$qi]['task'] = FromArray($hut['quest'][$qi]['taskid'], $this->CS->QuestMission);
+					$qi++;
 
-				//quest terminator inbetween multiple quests
-				if($this->hota_subrev >= $this::HOTA_SUBREV3 && ($i < $numquest - 1)) {
-					$this->SkipBytes(1);
+					$reward = $this->ReadReward();
+					$hut = array_merge($hut, $reward);
 				}
 			}
-			//when there are cycled quests, reward is copied, but it's the same so just read it and dont save it
-			$this->ReadReward();
 		}
 
 		$this->SkipBytes(2);
@@ -3329,7 +3327,7 @@ class H3MAPSCAN {
 		//get file header to check if it is gzip
 		$gzipheader = fread($file, 4);
 
-		//if gzip, last 4 bytes are incompressed size
+		//if gzip, last 4 bytes are uncompressed size
 		fseek($file, -4, SEEK_END);
 		$gzipend = fread($file, 4);
 		fclose($file);
@@ -3359,23 +3357,10 @@ class H3MAPSCAN {
 	private function UnGZIP() {
 		$this->mapdata = gzdecode(file_get_contents($this->mapfile));
 		return;
-
-		/*
-		// Raising this value may increase performance
-		$buffer_size = 10240; // read 10 kB at a time
-
-		$gzfile = gzopen($this->mapfile, 'rb');
-		// Keep repeating until the end of the input file
-		while(!gzeof($gzfile)) {
-			// Read buffer-size bytes
-			$this->mapdata .= gzread($gzfile, $buffer_size);
-		}
-		gzclose($gzfile);
-		*/
 	}
 
 	private function ReadUint8(){
-		if($this->pos >= $this->length || $this->pos < 0){
+		if($this->pos >= $this->length){
 			dbglog();
 			die('Bad position '.$this->pos);
 			return;
@@ -3433,7 +3418,7 @@ class H3MAPSCAN {
 
 	private function ReadString($length = -1){
 		$res = '';
-		if($this->pos >= $this->length || $this->pos < 0){
+		if($this->pos >= $this->length) {
 			dbglog();
 			$this->mapdata = null;
 			$this->terrain = null;
@@ -3443,10 +3428,13 @@ class H3MAPSCAN {
 			return;
 		}
 
-		if($length == -1){
+		if($length == -1) {
 			$length = $this->ReadUint32();
-			if($length == 0) return $res;
+			if($length == 0) {
+				return $res;
+			}
 			if($length > 100000 || $length < 0) {
+				vd($this->mapfile);
 				vd($length);
 				dbglog();
 				$this->mapdata = null;
@@ -3461,17 +3449,19 @@ class H3MAPSCAN {
 			$res = substr($this->mapdata, $this->pos, $length);
 			$this->pos += $length;
 		}
-		elseif($length > 0){
+		/*
+		elseif($length > 0) {
 			$res = substr($this->mapdata, $this->pos, $length);
 			$this->pos += $length;
 		}
-		/*else {
+		else {
 			return;
 			while(ord($this->mapdata[$this->pos]) != 0) {
 				$res .= $this->mapdata[$this->pos++];
 			}
 			$this->pos++; // advance pointer after finding the 0
-		}*/
+		}
+		*/
 
 		return $this->LangConvert($res);
 	}
@@ -3494,11 +3484,12 @@ class H3MAPSCAN {
 		}
 
 		switch ($this->language) {
+			case 'pl':
 			case 'cz': return @iconv('WINDOWS-1250', 'UTF-8', $text); //middle/eastern europe
 			case 'ru': return @iconv('WINDOWS-1251', 'UTF-8', $text); //russian
 			case 'cn': return @iconv('GB2312', 'UTF-8', $text); //chinese
 			case 'en':
-			default: return @iconv('WINDOWS-1250', 'UTF-8', $text);
+			default: return @iconv('WINDOWS-1252', 'UTF-8', $text);
 		}
 	}
 
@@ -3519,8 +3510,13 @@ class H3MAPSCAN {
 			),
 			//russian
 			'ru' => array(
-				chr(0xc0), chr(0xc1), chr(0xc5), chr(0xc7), chr(0xce), chr(0xd0), chr(0xd3), chr(0xde), chr(0xdf),
-				chr(0xe0), chr(0xe1), chr(0xe5), chr(0xe7), chr(0xee), chr(0xf0), chr(0xf3), chr(0xfe), chr(0xff)
+				chr(0xc0), chr(0xc5), chr(0xc7), chr(0xce), chr(0xd0), chr(0xde), chr(0xdf),
+				chr(0xe0), chr(0xe5), chr(0xe7), chr(0xee), chr(0xf0), chr(0xfe), chr(0xff)
+			),
+			//polish
+			'pl' => array(
+				chr(0xa3), chr(0xa5), chr(0xaf), chr(0xca), chr(0xd1),
+				chr(0xb3), chr(0xb9), chr(0xbf), chr(0xea), chr(0xf1)
 			),
 			//czech
 			'cz' => array(

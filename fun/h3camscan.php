@@ -425,7 +425,7 @@ class H3CAMSCAN {
 		$scenario_num = 0;
 
 		if($this->exportmaps) {
-		  $camdir = MAPDIRCAMEXP.sanity_string($this->cam_name).'/';
+		  $camdir = MAPDIRCAMEXP.sanity_string(str_ireplace('.h3c', '', $this->mapfile)).'/';
 			if(!file_exists($camdir)) {
 				mkdir($camdir);
 			}
@@ -707,6 +707,7 @@ class H3CAMSCAN {
 		}
 
 		switch ($this->language) {
+			case 'pl':
 			case 'cz': return @iconv('WINDOWS-1250', 'UTF-8', $text); //middle/eastern europe
 			case 'ru': return @iconv('WINDOWS-1251', 'UTF-8', $text); //russian
 			case 'cn': return @iconv('GB2312', 'UTF-8', $text); //chinese
@@ -732,8 +733,13 @@ class H3CAMSCAN {
 			),
 			//russian
 			'ru' => array(
-				chr(0xc0), chr(0xc5), chr(0xc7), chr(0xce), chr(0xd0), chr(0xd3), chr(0xde), chr(0xdf),
-				chr(0xe0), chr(0xe5), chr(0xe7), chr(0xee), chr(0xf0), chr(0xf3), chr(0xfe), chr(0xff)
+				chr(0xc0), chr(0xc5), chr(0xc7), chr(0xce), chr(0xd0), chr(0xde), chr(0xdf),
+				chr(0xe0), chr(0xe5), chr(0xe7), chr(0xee), chr(0xf0), chr(0xfe), chr(0xff)
+			),
+			//polish
+			'pl' => array(
+				chr(0xa3), chr(0xa5), chr(0xaf), chr(0xca), chr(0xd1),
+				chr(0xb3), chr(0xb9), chr(0xbf), chr(0xea), chr(0xf1)
 			),
 			//czech
 			'cz' => array(
@@ -746,6 +752,9 @@ class H3CAMSCAN {
 			foreach($chars as $ch) {
 				if(strstr($text, $ch) !== false) {
 					$this->language = $lang;
+					//vd(dechex(ord($ch)));
+					//vd($this->language);
+					//showbytes($text);
 					return;
 				}
 			}

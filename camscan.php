@@ -85,6 +85,7 @@ $cam = [
 	20 => 'H1Roger.h3c',
 	21 => 'H2Terror.h3c',
 	22 => 'H3Horn.h3c',
+	23 => 'siege_war_1723.h3c',
 ];
 
 $camfile = $cam[$num];
@@ -96,7 +97,7 @@ H3C_CAMHTMCACHE
 */
 
 $mapfile = MAPDIRCAM.$camfile;
-$map = new H3CAMSCAN($mapfile, H3C_PRINTINFO | H3C_SAVECAMDB | H3C_EXPORTMAPS | H3C_CAMHTMCACHE);
+$map = new H3CAMSCAN($mapfile, H3C_PRINTINFO | H3C_SAVECAMDB | H3C_EXPORTMAPS); // | H3C_CAMHTMCACHE
 $map->ReadCAM();
 $map->ReadMaps();
 
