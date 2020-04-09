@@ -180,6 +180,10 @@ class H3MAPSCAN {
 			if(!$this->filebad) {
 				if($this->isGzip) {
 					$this->mapdata = gzdecode(file_get_contents($this->mapfile));
+					if(!$this->mapdata) {
+						echo $this->mapfile.' could not be uncompressed'.ENVE;
+						$this->filebad = true;
+					}
 					//$this->Ungzip();
 				}
 				else {
