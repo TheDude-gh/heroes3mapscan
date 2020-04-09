@@ -44,10 +44,10 @@ require_once 'fun/config.php';
 //http://heroescommunity.com/viewthread.php3?TID=42097&pagenumber=1
 
 require_once 'fun/h3camscan.php';
-require_once 'fun/camconstants.php';
-require_once 'fun/mapscanf.php';
+require_once 'fun/h3camconstants.php';
+require_once 'fun/h3mapscan.php';
+require_once 'fun/h3mapconstants.php';
 require_once 'fun/mapsupport.php';
-require_once 'fun/mapconstants.php';
 
 /*$scan = new ScanSubDir();
 $scan->SetFilter(array('h3c'));

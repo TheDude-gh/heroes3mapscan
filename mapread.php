@@ -3,9 +3,9 @@
 
 	require_once './fun/mi.php';
 	require_once './fun/config.php';
-	require_once './fun/mapscanf.php';
+	require_once './fun/h3mapscan.php';
+	require_once './fun/h3mapconstants.php';
 	require_once './fun/mapsupport.php';
-	require_once './fun/mapconstants.php';
 
 	$mapname = expost('map', '');
 	$num = expost('num', 0);

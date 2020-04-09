@@ -47,9 +47,9 @@ require_once 'fun/config.php';
 <br />
 <?php
 
-require_once 'fun/mapscanf.php';
+require_once 'fun/h3mapscan.php';
+require_once 'fun/h3mapconstants.php';
 require_once 'fun/mapsupport.php';
-require_once 'fun/mapconstants.php';
 
 
 
