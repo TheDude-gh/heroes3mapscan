@@ -47,14 +47,20 @@
 	}
 
 	function use_cache($cache_file, $cache_period){
-		if(isSet($_GET['rc'])) return false;
-		if(file_exists($cache_file) && (time() < filemtime($cache_file) + $cache_period)) return true; //use cache
+		if(isSet($_GET['rc'])) {
+			return false;
+		}
+		if(file_exists($cache_file) && (time() < filemtime($cache_file) + $cache_period)) {
+			return true; //use cache
+		}
 		return false; //make new
 	}
 
 	function mq($sql){
 		$qres = mysqli_query(db_link(), $sql);
-		if(!$qres) mlog($sql);
+		if(!$qres) {
+			mlog($sql);
+		}
 		return $qres;
 	}
 
@@ -103,11 +109,17 @@
 
 	function mlog($sql){
 		$me = mysqli_error(db_link());
-		echo $me;
-		return;
+		if(LOCAL) {
+			echo $me.'<br /><br />';
+			vd($sql);
+			return;
+		}
 
-		$fmlog .= 'cache/log_sql.log';
-		if(!file_exists($fmlog)) return;
+		$fmlogdir = 'cache/';
+		$fmlog = $fmlogdir.'log_sql.log';
+		if(!file_exists($fmlogdir)) {
+			return;
+		}
 		$time = date('Y-m-d H:i:s, ', time());
 		$dt = debug_backtrace();
 		$dbl = '';
@@ -129,8 +141,8 @@
 		return number_format($value, $round, '.', ',');
 	}
 
-	function padleft($value){
-		return str_pad($value, 2, 0, STR_PAD_LEFT);
+	function padleft($value, $len = 2, $char = '0') {
+		return str_pad($value, $len, $char, STR_PAD_LEFT);
 	}
 
 	function vd($var){

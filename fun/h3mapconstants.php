@@ -65,7 +65,14 @@
 		const POSSIBLE = 1;
 		const BLOCKED  = 2;
 		const USED     = 3;
-		const ACCESSIBLE = 2;
+		const ACCESSIBLE = 1;
+	}
+
+	class BLOCKMAPBITS {
+		const VISIBLE   = 1; //free tile
+		const VISITABLE = 2; //tile with object, that can be stepped on
+		const BLOCKED   = 4; //tile with inaccessible object
+		const COMBINED  = 6; //tile with any object, VISITABLE | BLOCKED
 	}
 
 	class TERRAIN {
@@ -121,13 +128,6 @@
 
 		//count
 		const TERRAINNUM = 12;
-	}
-
-	class BLOCKMAPBITS {
-		const VISIBLE   = 1; //free tile
-		const VISITABLE = 2; //tile with object, that can be stepped on
-		const BLOCKED   = 4; //tile with inaccessible object
-		const COMBINED  = 6; //tile with any object, VISITABLE | BLOCKED
 	}
 
 	class VICTORY {

@@ -8,6 +8,7 @@ const H3M_EXPORTMAP     = 0x0010; //uncompresses and saves pure h3m file
 const H3M_BASICONLY     = 0x0020; //reads only basic info about map, for fast read, when active, wont read and build map image
 const H3M_MAPHTMCACHE   = 0x0040; //save printinfo htm file, requires printinfo
 const H3M_SPECIALACCESS = 0x0080; //displays some objects on map in different color
+const H3M_TERRAINONLY   = 0x0100; //reads basic info and terrain only
 
 class H3MAPSCAN {
 	const IMGSIZE = 576;
@@ -121,6 +122,10 @@ class H3MAPSCAN {
 	private $basiconly = false; //read only basic info map, wont make map nor object info
 	private $special_access = false; //draw special tiles on map image
 	private $maphtmcache = false; //cache htm printinfo
+	private $terrainonly = false; //reads only basic info and terrain
+
+	private $fastread = false; //fast read is combination of $buildMapImage and $save for cases only to build map image and save basic info to DB
+	private $skipstrings = false; // when fast info, string after map description will be skipped
 
 	private $debug;
 
@@ -144,6 +149,8 @@ class H3MAPSCAN {
 		$this->basiconly      = ($modes & H3M_BASICONLY);
 		$this->maphtmcache    = ($modes & H3M_MAPHTMCACHE);
 		$this->special_access = ($modes & H3M_SPECIALACCESS);
+		$this->terrainonly    = ($modes & H3M_TERRAINONLY);
+		$this->fastread       = ($modes == (H3M_BUILDMAP | H3M_SAVEMAPDB));
 
 		if($mapdata != null) {
 			$this->mapfile = $mapfile;
@@ -869,13 +876,6 @@ class H3MAPSCAN {
 
 
 		$print .= '<br />Templates count: '.$this->objTemplatesNum.'<br />';
-		/*
-		$print .= '<table>';
-		foreach($this->objTemplates as $temp) {
-			$print .= '<tr><td>ID:'.$temp['id'].', SubID:'.$temp['subid'].'<td>'.$temp['animation'].'</td><td>'.nl2br($temp['mask']).'</td></tr>';
-		}
-		$print .= '</table>';
-		*/
 
 		$print .= 'Objects type count: '.count($this->objects_unique).'<br />';
 		$print .= 'Objects total count: '.$this->objectsNum.'<br />';
@@ -905,13 +905,37 @@ class H3MAPSCAN {
 		}
 	}
 
-
 	public function ReadMap() {
 		if($this->filebad) {
 			return;
 		}
 
+		//when there is some problem with map structure, exception is thrown at reading functions, and scanning stops
+		try {
+			$this->ReadMapEx();
+		}
+		catch(Exception $e) {
+			echo $e->GetMessage();
+		}
+		
+		$this->GetVersionName();
+		$this->GetMapSize();
+		$this->GetDifficulty();
+		
+		if($this->printoutput && $this->webmode) {
+			$this->PrintMapInfo();
+		}
 
+		if(!$this->webmode && !$this->basiconly) {
+			$this->BuildMap();
+		}
+
+		if($this->save){
+			$this->SaveMap();
+		}
+	}
+
+	public function ReadMapEx() {
 
 		$this->pos = 0;
 		$this->CS = new HeroesConstants();
@@ -945,10 +969,10 @@ class H3MAPSCAN {
 
 		$this->description = $this->ReadString();
 		$this->map_diff = $this->ReadUint8();
-
-		$this->GetVersionName();
-		$this->GetMapSize();
-		$this->GetDifficulty();
+		
+		if($this->fastread) {
+			$this->skipstrings = true;
+		}
 
 		if($this->version != $this::ROE) {
 			$this->hero_levelcap = $this->ReadUint8(); //hero's cap
@@ -963,57 +987,49 @@ class H3MAPSCAN {
 		// Teams
 		$this->Teams();
 
-		if(!$this->basiconly) {
-			// Free Heroes
-			$this->FreeHeroes();
-
-			$this->SkipBytes(31); //unused space
-
-			$this->HotaMapExtra(); //hota extras
-
-			// Artefacts
-			$this->Artifacts();
-
-			//allowed spells and abilities
-			$this->AllowedSpellsAbilities();
-
-			// Rumors
-			$this->Rumors();
-
-			// Heroes Params
-			$this->ReadPredefinedHeroes();
-
-			// Map
-			$this->ReadTerrain();
-
-			//object definitions
-			$this->ReadDefInfo();
-
-			//objects
-			$this->ReadObjects();
-
-			//global event
-			$this->ReadEvents();
+		if($this->basiconly) {
+			$this->readok = true;
+			return;
 		}
 
+		// Free Heroes
+		$this->FreeHeroes();
 
-		if($this->printoutput && $this->webmode) {
-			$this->PrintMapInfo();
+		$this->SkipBytes(31); //unused space
+
+		$this->HotaMapExtra(); //hota extras
+
+		// Artefacts
+		$this->Artifacts();
+
+		//allowed spells and abilities
+		$this->AllowedSpellsAbilities();
+
+		// Rumors
+		$this->Rumors();
+
+		// Heroes Params
+		$this->ReadPredefinedHeroes();
+
+		// Map
+		$this->ReadTerrain();
+
+		if($this->terrainonly) {
+			$this->readok = true;
+			return;
 		}
 
-		if(!$this->webmode && !$this->basiconly) {
-			$this->BuildMap();
-		}
+		//object definitions
+		$this->ReadDefInfo();
 
-		if($this->save){
-			$this->SaveMap();
-		}
+		//objects
+		$this->ReadObjects();
+
+		//global event
+		$this->ReadEvents();
 
 		$this->readok = true;
 
-		/*if(!file_exists('maps_done/'.$this->mapfile)) {
-			rename(MAPDIR.$this->mapfile, 'maps_done/'.$this->mapfile);
-		}*/
 	}
 
 	private function ReadPlayersData() {
@@ -1186,7 +1202,6 @@ class H3MAPSCAN {
 				$hero['mask'] = 0;
 				$this->customHeroes[$hero['id']] = $hero;
 			}
-
 		}
 
 		if($this->version >= $this::SOD) {
@@ -1196,7 +1211,7 @@ class H3MAPSCAN {
 			for($i = 0; $i < $heroCustomCount; $i++) {
 				$hero['id'] = $this->ReadUint8();
 				$hero['face'] = $this->ReadUint8();  //picture
-				$hero['name'] = $this->Readstring();
+				$hero['name'] = $this->ReadString();
 				$hero['mask'] = $this->ReadUint8();  //player availability
 				$this->customHeroes[$hero['id']] = $hero;
 			}
@@ -1738,6 +1753,21 @@ class H3MAPSCAN {
 			}
 		}
 	}
+	
+	public function GetTerrain() {
+		$surf = [];
+
+		foreach($this->terrain as $z => $row) {
+			foreach($row as $x => $col) {
+				foreach($col as $y => $cell) {
+					//$surf .= padleft($cell->surface, 2, ' ').' ';
+					$this->terrain[$z][$x][$y] = $cell->surface;
+				}
+			}
+		}
+		
+		return [$surf, $this->terrainRate];
+	}
 
 	public function BuildMap() {
 
@@ -1830,18 +1860,36 @@ class H3MAPSCAN {
 			imagedestroy($imgmap);
 		}
 	}
+	
+	private function GetCellSurface($cell){
+		if($cell->owner != OWNERNONE) {
+			if($cell->owner > TERRAIN::NEUTRAL - TERRAIN::OFFPLAYERS) {
+				return TERRAIN::NEUTRAL;
+			}
+			return $cell->owner + TERRAIN::OFFPLAYERS;
+		}
+		elseif($this->special_access && $cell->special != MAPSPECIAL::NONE) {
+			return $cell->special + TERRAIN::OFFSPECIAL;
+		}
+		elseif($cell->access == 0){
+			return $cell->surface;
+		}
+		else {
+			return $cell->surface + TERRAIN::OFFBLOCKED;
+		}
+	}
 
 	public function DisplayMap() {
 		$imgmapnameg = MAPDIRIMG.$this->mapimage.'_g.png';
 		$imgmapnameu = MAPDIRIMG.$this->mapimage.'_u.png';
 
-		$mapsizepow = $this->map_size * $this->map_size;
-		$output = '<br />Map : size='.$this->map_size.', cells='.$mapsizepow.', bytes='.($mapsizepow * 7).'<br />';
+		//$mapsizepow = $this->map_size * $this->map_size;
+		//$output = '<br />Map : size='.$this->map_size.', cells='.$mapsizepow.', bytes='.($mapsizepow * 7).'<br />';
 
 		$imgground = file_exists($imgmapnameg) ? '<img src="'.$imgmapnameg.'" alt="ground" title="ground" />' : 'Map Ground';
-		$output .= '<table class="mapimages"><tr><td>'.$imgground.'</td>';
+		$output = '<table class="mapimages"><tr><td>'.$imgground.'</td>';
 		if($this->underground) {
-			$imguground = file_exists($imgmapnameu) ? '<img src="'.$imgmapnameu.'" alt="ground" title="ground" />' : 'Map Ground';
+			$imguground = file_exists($imgmapnameu) ? '<img src="'.$imgmapnameu.'" alt="ground" title="ground" />' : 'Map Underground';
 			$output .= '<td>'.$imguground.'</td>';
 		}
 		$output .= '</tr></table>';
@@ -1853,8 +1901,8 @@ class H3MAPSCAN {
 
 		// Read custom defs
 		for($i = 0; $i < $this->objTemplatesNum; $i++) {
-			$objtemp = array();
-			$objtemp['animation'] = $this->ReadString();
+			$objtemp = new ObjectTemplate();
+			$objtemp->animation = $this->ReadString();
 
 			$blockMask = array();
 			$visitMask = array();
@@ -1872,17 +1920,23 @@ class H3MAPSCAN {
 				}
 
 				//build object shape
+				$rowempty = array(0, 0, 0, 0, 0, 0);
+				$colempty = array(0, 0, 0, 0, 0, 0, 0, 0);
 				for ($r = 0; $r < 6; $r++) { // 6 rows y-axis
 					for ($c = 0; $c < 8; $c++) { // 8 columns	 x-axis
-						$tile = BLOCKMAPBITS::VISIBLE; // assume that all tiles are visible
-						if ((($blockMask[$r] >> $c) & 1) == 0) {
-							$tile |= BLOCKMAPBITS::BLOCKED;
-						}
+						$tile = TILETYPE::FREE; // default tile is empty
+						//once tile is accesible, it's also blocked
 						if ((($visitMask[$r] >> $c) & 1) != 0) {
-							$tile |= BLOCKMAPBITS::VISITABLE;
+							$tile = TILETYPE::ACCESSIBLE;
+						}
+						//once blocked, it's always blocked
+						elseif ((($blockMask[$r] >> $c) & 1) == 0) {
+							$tile = TILETYPE::BLOCKED;
 						}
 
-						$usedTiles[5 - $r][7 - $c] = $tile;
+						if($tile != TILETYPE::FREE) {
+							$usedTiles[5 - $r][7 - $c] = $tile;
+						}
 					}
 				}
 			}
@@ -1893,53 +1947,18 @@ class H3MAPSCAN {
 			$this->SkipBytes(2); //landscape
 			$this->SkipBytes(2); //allowed terrain for object, not needed
 
-			$objtemp['id'] = $this->ReadUint32();
-			$objtemp['subid'] = $this->ReadUint32();
-			$objtemp['type'] = $this->ReadUint8();
-			$objtemp['printpriority'] = $this->ReadUint8();
-			$objtemp['tiles'] = $usedTiles;
+			$objtemp->id = $this->ReadUint32();
+			$objtemp->subid = $this->ReadUint32();
+			$this->SkipBytes(2); //type and print, not needed
+			//$objtemp->type = $this->ReadUint8();
+			//$objtemp->printpriority-> = $this->ReadUint8();
+			$objtemp->tiles = $usedTiles;
 
 			$this->SkipBytes(16);
 
 			$this->objTemplates[] = $objtemp;
 		}
-	}
 
-	private function ReadMessageAndGuards() {
-		$mag = array();
-		$hasMessage = $this->ReadUint8();
-		if($hasMessage) {
-			$mag['message'] = $this->ReadString();
-			$hasGuards = $this->ReadUint8();
-			if($hasGuards) {
-				$mag['stack'] = $this->ReadCreatureSet(7);
-			}
-			$this->SkipBytes(4);
-		}
-		return $mag;
-	}
-
-	private function ReadCreatureSet($number) {
-		$version = ($this->version > $this::ROE);
-		$maxID = $version ? 0xffff : 0xff;
-
-		$stack = array();
-
-		for($i = 0; $i < $number; $i++) {
-			$creatureID = $version ? $this->ReadUint16() : $this->ReadUint8();
-			$count = $this->ReadUint16();
-
-			// Empty slot
-			if($creatureID == $maxID) {
-				continue;
-			}
-			if($creatureID > $maxID - 0x0f) {
-				//this will happen when random object has random army
-				$creatureID = ($maxID - $creatureID - 1) + 1000; //arbitrary 1000 for extension of monster ids
-			}
-			$stack[] = array('id' => $creatureID, 'count' => $count);
-		}
-		return $stack;
 	}
 
 	private function ReadObjects() {
@@ -1965,10 +1984,9 @@ class H3MAPSCAN {
 			$objid = $objsubid = OBJECT_INVALID;
 
 			if(array_key_exists($defnum, $this->objTemplates)){
-				$objid = $this->objTemplates[$defnum]['id'];
+				$objid = $this->objTemplates[$defnum]->id;
 				$obj['id'] = $objid;
-				$obj['subid'] = $this->objTemplates[$defnum]['subid'];
-				$obj['type'] = $this->objTemplates[$defnum]['type'];
+				$obj['subid'] = $this->objTemplates[$defnum]->subid;
 				$obj['objname'] = $this->GetObjectById($objid);
 				$objsubid = $obj['subid'];
 
@@ -2465,8 +2483,9 @@ class H3MAPSCAN {
 			//if we dont build map, we dont need to save terrain access
 			if($this->buildMapImage && $objid != OBJECT_INVALID) {
 				$mapsizemax = $this->map_size - 1; //index starts with 0, we make variable here to not substract 1 in loop to make more readable
-				for($iy = 0; $iy < 6; $iy++){ //y-axis of object tiles
-					for($ix = 0; $ix < 8; $ix++){ //x-axis of object tiles
+
+				foreach($this->objTemplates[$defnum]->tiles as $iy => $col) { //y-axis of object tiles
+					foreach($col as $ix => $tilemask) { //x-axis of object tiles
 						//real xy position on map
 						$mx = $x - $ix;
 						$my = $y - $iy;
@@ -2481,24 +2500,24 @@ class H3MAPSCAN {
 							continue;
 						}
 
-						//object tilemask for current tile. With this, it can be checked whether tile can be stepped on
-						$tilemask = $this->objTemplates[$defnum]['tiles'][$iy][$ix];
-
+						//$tilemask is object tilemask for current tile. With this, it can be checked whether tile can be stepped on
 						//check if tile has object on it, if yes, continue with checks
-						if(($tilemask & BLOCKMAPBITS::COMBINED) != TILETYPE::FREE) {
-							//is object owned? if yes, mark tile as owned
-							if($tileowner != OWNERNONE) {
-								$this->terrain[$z][$my][$mx]->owner = $tileowner;
-							}
-							//has object some special color rule? if yes, mark as special
-							elseif($special != MAPSPECIAL::NONE){
-								$this->terrain[$z][$my][$mx]->special = MAPSPECIAL::ANY;
-							}
-							//can object tile be stepped on? if no, apply tilemask, which marks access as nono
-							elseif(($tilemask & BLOCKMAPBITS::VISITABLE) != TILETYPE::ACCESSIBLE) {
-								$this->terrain[$z][$my][$mx]->access = $tilemask;
-							}
+						if($tilemask == TILETYPE::FREE) {
+							continue;
 						}
+						//is object owned? if yes, mark tile as owned
+						elseif($tileowner != OWNERNONE) {
+							$this->terrain[$z][$my][$mx]->owner = $tileowner;
+						}
+						//has object some special color rule? if yes, mark as special
+						elseif($special != MAPSPECIAL::NONE){
+							$this->terrain[$z][$my][$mx]->special = MAPSPECIAL::ANY;
+						}
+						//can object tile be stepped on? if no, apply tilemask, which marks access as blocked
+						elseif($tilemask != TILETYPE::ACCESSIBLE) {
+							$this->terrain[$z][$my][$mx]->access = $tilemask;
+						}
+						
 					}
 				}
 			}
@@ -2912,6 +2931,43 @@ class H3MAPSCAN {
 		}
 	}
 
+	private function ReadMessageAndGuards() {
+		$mag = array();
+		$hasMessage = $this->ReadUint8();
+		if($hasMessage) {
+			$mag['message'] = $this->ReadString();
+			$hasGuards = $this->ReadUint8();
+			if($hasGuards) {
+				$mag['stack'] = $this->ReadCreatureSet(7);
+			}
+			$this->SkipBytes(4);
+		}
+		return $mag;
+	}
+
+	private function ReadCreatureSet($number) {
+		$version = ($this->version > $this::ROE);
+		$maxID = $version ? 0xffff : 0xff;
+
+		$stack = array();
+
+		for($i = 0; $i < $number; $i++) {
+			$creatureID = $version ? $this->ReadUint16() : $this->ReadUint8();
+			$count = $this->ReadUint16();
+
+			// Empty slot
+			if($creatureID == $maxID) {
+				continue;
+			}
+			if($creatureID > $maxID - 0x0f) {
+				//this will happen when random object has random army
+				$creatureID = ($maxID - $creatureID - 1) + 1000; //arbitrary 1000 for extension of monster ids
+			}
+			$stack[] = array('id' => $creatureID, 'count' => $count);
+		}
+		return $stack;
+	}
+	
 	private function ReadResourses() {
 		$resources = array();
 		for($i = 0; $i < 7; $i++) {
@@ -2921,24 +2977,6 @@ class H3MAPSCAN {
 			}
 		}
 		return $resources;
-	}
-
-	private function GetCellSurface($cell){
-		if($cell->owner != OWNERNONE) {
-			if($cell->owner > TERRAIN::NEUTRAL - TERRAIN::OFFPLAYERS) {
-				return TERRAIN::NEUTRAL;
-			}
-			return $cell->owner + TERRAIN::OFFPLAYERS;
-		}
-		elseif($this->special_access && $cell->special != MAPSPECIAL::NONE) {
-			return $cell->special + TERRAIN::OFFSPECIAL;
-		}
-		elseif($cell->access == 0){
-			return $cell->surface;
-		}
-		else {
-			return $cell->surface + TERRAIN::OFFBLOCKED;
-		}
 	}
 
 	private function ParseFinish(){
@@ -3236,94 +3274,6 @@ class H3MAPSCAN {
 		return '? '.$uid;
 	}
 
-
-	/*public function ObjectsShow() {
-
-		$valido = array(
-			OBJECTS::ABANDONED_MINE,
-			OBJECTS::ARTIFACT,
-			OBJECTS::BORDER_GATE,
-			OBJECTS::BORDERGUARD,
-			OBJECTS::CREATURE_GENERATOR1,
-			OBJECTS::CREATURE_GENERATOR2,
-			OBJECTS::CREATURE_GENERATOR3,
-			OBJECTS::CREATURE_GENERATOR4,
-			OBJECTS::GARRISON,
-			OBJECTS::GARRISON2,
-			OBJECTS::GRAIL,
-			OBJECTS::HERO,
-			OBJECTS::HERO_PLACEHOLDER,
-			OBJECTS::KEYMASTER,
-			OBJECTS::LIGHTHOUSE,
-			OBJECTS::MINE,
-			OBJECTS::MONSTER,
-			OBJECTS::OCEAN_BOTTLE,
-			OBJECTS::PANDORAS_BOX,
-			OBJECTS::PRISON,
-			OBJECTS::PYRAMID,
-			OBJECTS::QUEST_GUARD,
-			OBJECTS::RANDOM_ART,
-			OBJECTS::RANDOM_DWELLING,
-			OBJECTS::RANDOM_DWELLING_FACTION,
-			OBJECTS::RANDOM_DWELLING_LVL,
-			OBJECTS::RANDOM_HERO,
-			OBJECTS::RANDOM_MAJOR_ART,
-			OBJECTS::RANDOM_MINOR_ART,
-			OBJECTS::RANDOM_MONSTER,
-			OBJECTS::RANDOM_MONSTER_L1,
-			OBJECTS::RANDOM_MONSTER_L2,
-			OBJECTS::RANDOM_MONSTER_L3,
-			OBJECTS::RANDOM_MONSTER_L4,
-			OBJECTS::RANDOM_MONSTER_L5,
-			OBJECTS::RANDOM_MONSTER_L6,
-			OBJECTS::RANDOM_MONSTER_L7,
-			OBJECTS::RANDOM_RELIC_ART,
-			OBJECTS::RANDOM_RESOURCE,
-			OBJECTS::RANDOM_TOWN,
-			OBJECTS::RANDOM_TREASURE_ART,
-			OBJECTS::RESOURCE,
-			OBJECTS::SEER_HUT,
-			OBJECTS::SHIPYARD,
-			OBJECTS::SHRINE_OF_MAGIC_GESTURE,
-			OBJECTS::SHRINE_OF_MAGIC_INCANTATION,
-			OBJECTS::SHRINE_OF_MAGIC_THOUGHT,
-			OBJECTS::SCHOLAR,
-			OBJECTS::SIGN,
-			OBJECTS::SPELL_SCROLL,
-			OBJECTS::TOWN,
-			OBJECTS::WITCH_HUT,
-			OBJECTS::EVENT
-		);
-
-		echo count($this->objects);
-		foreach($this->objects as $o) {
-			if(!in_array($o['id'], $valido)) continue;
-			if($o['id'] != OBJECTS::SIGN) continue;
-
-			/*if(!array_key_exists($o['subid'], $mines)) {
-				$mines[$o['subid']] = 0;
-			}
-			$mines[$o['subid']]++;
-			if($o['subid'] != 7) continue;*/
-			/*if(!array_key_exists($o['data']['name'], $mons)) {
-				$mons[$o['data']['name']] = 0;
-			}
-			$mons[$o['data']['name']]++;* /
-		}
-		//ksort($mines);
-		//ksort($mons);
-
-		return;
-		$mobs = array();
-		foreach($this->mapobjects as $mo) {
-			$mobs[] = $this->GetObjectById($mo['objid']).', '.$mo['name'].'<br />';
-		}
-		sort($mobs);
-		foreach($mobs as $mo) {
-			echo $mo;
-		}
-	}*/
-
 	//check, if map is compressed or not, compressed starts with 1F 8B 08 00 in LE, that's 0x00088B1F
 	private function IsGZIP() {
 		$file = fopen($this->mapfile, 'rb');
@@ -3366,7 +3316,7 @@ class H3MAPSCAN {
 	private function ReadUint8(){
 		if($this->pos >= $this->length){
 			dbglog();
-			die('Bad position '.$this->pos);
+			throw new Exception('Bad position '.$this->pos);
 			return;
 		}
 		return ord($this->mapdata[$this->pos++]);
@@ -3428,7 +3378,7 @@ class H3MAPSCAN {
 			$this->terrain = null;
 			$this->CS = null;
 			//vd($this);
-			die('Bad string pos '.$this->pos);
+			throw new Exception('Bad string pos '.$this->pos);
 			return;
 		}
 
@@ -3447,9 +3397,16 @@ class H3MAPSCAN {
 				//$this->objTemplates = null;
 				//vd($this->objects);
 				//vd($this);
-				die('Too long string '.$length);
+				throw new Exception('Too long string '.$length);
 				return;
 			}
+
+			//fastread
+			if($this->skipstrings) {
+				$this->pos += $length;
+				return '';
+			}
+			
 			$res = substr($this->mapdata, $this->pos, $length);
 			$this->pos += $length;
 		}
@@ -3561,6 +3518,15 @@ class H3MAPSCAN {
 
 }
 
+
+class ObjectTemplate {
+	public $id;   //object id
+	public $subid; //object subid, e.g. castle type, etc.
+	//public $type; //type something, not used here
+	//public $printpriority; //ingame only, not used here
+	public $animation; //sprite name, used only for debug here
+	public $tiles; //object tiles and tilemasks 
+}
 
 class MapCell {
 	public $surface;      //surface land type
