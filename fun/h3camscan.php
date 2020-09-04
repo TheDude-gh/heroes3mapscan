@@ -465,19 +465,22 @@ class H3CAMSCAN {
 
 				for ($b = 0; $b < $bonus['num']; $b++) {
 					if($b > 0) {
-						$bonuses .= '<br />';
+						$bonuses .= '<tr>';
 					}
-					$bonuses .= $this->GetCamBonusById($bonus[$b]['type']).' - '.$bonus[$b]['text'];
+					$bonuses .= '<td>'.$this->GetCamBonusById($bonus[$b]['type']).' - '.$bonus[$b]['text'].'</td></tr>'.EOL;
 				}
 
 				//echo $mapfile.' - '.$i.' '.strlen($this->gzipparts[$i]).'<br />';
+				if($bonus['num'] == 0) {
+					$bonuses = '<td></td></tr>';
+				};
 			
 				$printinfo .= '<tr>';
 				foreach($headerInfo as $hi) {
-					$printinfo .= '<td>'.$hi.'</td>';
+					$rowspan = $bonus['num'] > 0 ? ' rowspan="'.$bonus['num'].'"' : '';
+					$printinfo .= '<td'.$rowspan.'>'.$hi.'</td>';
 				}
-				$printinfo .= '<td>'.$bonuses.'</td>';
-				$printinfo .= '</tr>';
+				$printinfo .= $bonuses;
 			}
 		}
 		
