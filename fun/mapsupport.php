@@ -50,6 +50,60 @@ class ScanSubDir {
 
 class StringConvert {
 
+	private $lat;
+	private $cyr;
+
+	private $badchar;
+	private $goodchar;
+
+	public function __construct() {
+	  //cyrilic table
+		$this->cyr = [
+			'щ','ё','ж','ц','ч','ш','ю','я','а','б','в','г','д','е','з','и','й',
+			'к','л','м','н','о','п','р','с','т','у','ф','х','ъ','ы','ь','э',
+			'Щ','Ё','Ж','Ц','Ч','Ш','Ю','Я','А','Б','В','Г','Д','Е','З','И','Й',
+			'К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ъ','Ы','Ь','Э',
+		];
+
+		//latin table
+		$this->lat = [
+			'sht','io','zh','ts','ch','sh','yu','ya','a','b','v','g','d','e','z','i','y',
+			'k','l','m','n','o','p','r','s','t','u','f','h','a','i','y','e',
+			'Sht','Io','Zh','Ts','Ch','Sh','Yu','Ya','A','B','V','G','D','E','Z','I','Y',
+			'K','L','M','N','O','P','R','S','T','U','F','H','A','I','Y','e',
+		];
+
+		//conversion tables of unwanted and wanted chars
+		$this->badchar  = ['\'', '{', '}', '~', '¬', 'Ú', 'ß',  'á', 'ä', 'é', 'í', 'ó', 'ö', 'ú', 'ü', 'ý', 'ą', 'ć', 'č', 'ę', 'ě', 'ł', 'ř', 'Ś', 'ś', 'š', 'Ţ', 'ů', 'Ż', 'ż', 'ž', 'Č', 'ź', 'ń'];
+		$this->goodchar = ['',   '',   '',  '',  '', 'U', 'ss', 'a', 'a', 'e', 'i', 'o', 'o', 'u', 'u', 'y', 'a', 'c', 'c', 'e', 'e', 'l', 'r', 'S', 's', 's', 'T', 'u', 'Z', 'z', 'z', 'C', 'z', 'n'];
+	}
+
+
+	public function CyrLat($string, $type) { // LC= L => C,  CL= C => L
+		if($type == 'LC') { //cyrilic to latin
+			return str_replace($this->lat, $this->cyr, $string);
+		}
+		elseif($type == 'CL') { //latin to cyrilic
+			return str_replace($this->cyr, $this->lat, $string);
+		}
+		return $string;
+	}
+
+	//convert string to ascii only
+	public function AsciiConvert($string) {
+		return str_replace($this->badchar, $this->goodchar, $string);
+	}
+
+	public function SanityString($string) {
+		//convert from cyrilic to latin
+		$string = $this->CyrLat($string, 'CL');
+		//convert non asci chars to asci. Table is of course incomplete, just most common letters
+		$string = $this->AsciiConvert($string);
+		//sanity, remove all non asci chars and convert spaces to underscores
+		return $string;
+		return sanity_string($string);
+	}
+
 	//proprietary conversion to standard ascii and w1251 for russian and check and conversion for chinese
 	public function Convert($text) {
 		//there is no really easy and realiable way to detect correct language. So it's left as that for now
@@ -156,12 +210,65 @@ function sanity_string($string) {
 			$newstring .= '_';
 			continue;
 		}
-		if(($char < 'a' || $char > 'z') && ($char < '0' || $char > '9') && $char != '_' && $char != '-') {
+		elseif(($char < 'a' || $char > 'z') && ($char < '0' || $char > '9') && $char != '_' && $char != '-' && $char != '.') {
 			continue;
 		}
 		$newstring .= $string[$i];
 	}
 	return $newstring == '' ? $string : $newstring;
+}
+
+function h3mmakeFP($mapid, $terrate, $return = false) {
+	$bytefp = '';
+
+	foreach($terrate as $z => $rate) {
+		foreach($rate as $k => $ter) {
+			$bytefp .= chr(($ter & 0xff00) >> 8) . chr($ter & 0xff);
+		}
+	}
+	
+	if($bytefp == '') {
+		return;
+	}
+	
+	if($return) {
+		return $bytefp;
+	}
+
+	$bytefp = mes($bytefp);
+	$sql = "INSERT INTO heroes_mapfp (idm, fp) VALUES ($mapid, '$bytefp')";
+	mq($sql);
+}
+
+function GetCampaignLayout($layout) {
+	switch($layout) {
+		case 1:  return 'Long Live the Queen';
+		case 2:  return 'Liberation';
+		case 3:  return 'Song for the Father';
+		case 4:  return 'Dungeons and Devils';
+		case 5:  return 'Long Live the King';
+		case 6:  return 'Spoils of War';
+		case 7:  return 'Seeds of Discontent';
+		case 8:  return 'Dragon Slayer';
+		case 9:  return 'Foolhardy Waywardness';
+		case 10: return 'Festival of life';
+		case 11: return 'Dragon\'s Blood';
+		case 12: return 'Playing with Fire';
+		case 13: return 'Armageddon\'s Blade';
+		case 14: return 'Hack and Slash';
+		case 15: return 'Birth of a Barbarian';
+		case 16: return 'New Beginning';
+		case 17: return 'Elixir of Life';
+		case 18: return 'Rise of the Necromancer';
+		case 19: return 'Unholy Alliance';
+		case 20: return 'Specter of Power';
+		case 21: return 'Under rhe Jolly Roger';
+		case 22: return 'Terror of the Seas';
+		case 23: return 'Horn of the Abbys';
+		case 24: return 'Forged in Fire';
+		case 25: return 'Antagarich';
+		default: return 'Unknown';
+	}
 }
 
 ?>

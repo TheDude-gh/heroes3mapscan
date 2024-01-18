@@ -17,3 +17,4 @@
 *.h3c
 extradir_hpn
 extradir_map4heroes
+/mapreadfile.php

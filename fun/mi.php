@@ -16,18 +16,12 @@
 		$db_link = false;
 	}
 
-	function file_write($soubor,$data){
-		if(!$file = FOpen($soubor, 'w')) return false;
-		elseif(!FWrite($file, $data)) return false;
-		FClose($file);
-		return true;
+	function file_write($filename, $data){
+		return file_put_contents($filename, $data);
 	}
 
-	function file_append($soubor,$data){
-		if(!$file = FOpen($soubor, 'a')) return false;
-		elseif(!FWrite($file,$data)) return false;
-		else FClose($file);
-		return true;
+	function file_append($filename, $data){
+		return file_put_contents($filename, $data, FILE_APPEND);
 	}
 
 	function expost($name, $def = null){
@@ -151,7 +145,17 @@
 		echo '</pre>';
 	}
 
+	function vdc($var){
+		var_dump($var);
+	}
+
 	function pre($var){
 		echo '<pre class="vardump">'.$var.'</pre>';
+	}
+
+	function CheckAndMakeDir($dir) {
+		if(!file_exists($dir)) {
+			mkdir($dir);
+		}
 	}
 ?>

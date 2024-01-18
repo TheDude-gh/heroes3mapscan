@@ -5,9 +5,7 @@
 	const OWNNOONE = 0xff;
 	const OBJECT_INVALID = -1; //invalid object id
 	const COOR_INVALID = -1; //invalid coordinates
-
-	const MAXINT32 = 0x80000000; //1 << 31;
-	const MININT32 = 0x100000000; //1 << 32; //without minus
+	const HOTA_RANDOM = -1; //random chance in stuff
 
 	const PRIMARY_SKILLS = 4;
 	const SPELL_BYTE = 9;
@@ -20,12 +18,14 @@
 	const HEROES_QUANTITY = 156; //156 ? ROE,AB,SOD,WOG
 	const HEROES_QUANTITY_HOTA = 178; //HOTA
 	const SPELLS_QUANTITY = 70; //69 visible in editor
+	const MAX_TOWNS = 11; //original=9, HOTA=11
 
 	const PLAYERSNUM = 8;
 	const HNULL = 0;
 	const HNONE = 0xff; //general heroes NONE value
-	const HNONETOWN = 0x1ff;
-	const HOTAMONSTERIDS = 151;
+	const HNONE_TOWN = 0x1ff;
+	const HOTA_MONSTER_IDS = 151; //hota monster start index
+	const HOTA_ARTIFACTS_IDS = 141; //hota artifacts start index
 	const HNONE16 = 0xffff; //general heroes NONE value, 16 bit
 	const HNONE32 = 0xffffffff; //general heroes NONE value, 32 bit
 
@@ -268,6 +268,8 @@
 		const WINDMILL = 112;
 		const WITCH_HUT = 113;
 		const HOLE = 124;
+		const WATER_RESOURCE = 145;
+		const SEA_UNIVERSITY = 146;
 		const RANDOM_MONSTER_L5 = 162;
 		const RANDOM_MONSTER_L6 = 163;
 		const RANDOM_MONSTER_L7 = 164;
@@ -378,6 +380,7 @@
 			25 => 'Sorcery',
 			26 => 'Resistance',
 			27 => 'First Aid',
+			28 => 'Interference', //hota
 		];
 
 		public $Alignment = [
@@ -398,6 +401,7 @@
 			7 => 'Fortress',
 			8 => 'Conflux',
 			9 => 'Neutral/Cove',
+			10 => 'Factory',
 		];
 
 		public $AiTactic = [
@@ -817,11 +821,43 @@
 			164 => 'Nix Warrior',
 			165 => 'Sea Serpent',
 			166 => 'Haspid',
-			167 => 'Leprechaun',
-			168 => 'Satyr',
-			169 => 'Steel Golem',
-			170 => 'Fangarm',
+			167 => 'Satyr',
+			168 => 'Fangarm',
+			169 => 'Leprechaun',
+			170 => 'Steel Golem',
+			//138 => 'Halfling',
+			171 => 'Halfling Grenadier',
+			172 => 'Mechanic',
+			173 => 'Engineer',
+			174 => 'Armadillo',
+			175 => 'Bellwether Armadillo',
+			176 => 'Automaton',
+			177 => 'Sentinel Automaton',
+			178 => 'Sandworm',
+			179 => 'Olgoi-Khorkhoi',
+			180 => 'Gunslinger',
+			181 => 'Bounty Hunter',
+			182 => 'Couatl',
+			183 => 'Crimson Couatl',
+			184 => 'Dreadnought',
+			185 => 'Juggernaut',
 			255 => 'Random',
+
+		];
+
+		//array with monster indexes for town events
+		public $TownUnits = [
+			[0, 2, 4, 6, 8, 10, 12], //castle
+			[14, 16, 18, 20, 22, 24, 26], //rampart
+			[28, 30, 32, 34, 36, 38, 40], //tower
+			[42, 44, 46, 48, 50, 52, 54], //inferno
+			[56, 58, 60, 62, 64, 66, 68], //necropolis
+			[70, 72, 74, 76, 78, 80, 82], //dungeon
+			[84, 86, 88, 90, 92, 94, 96], //stronghold
+			[98, 100, 102, 104, 106, 108, 110], //fortress
+			[118, 112, 115, 114, 113, 120, 130], //conflux
+			[153, 155, 157, 159, 161, 163, 165], //cove
+			[171, 173, 175, 177, 179, 181, 183, 185], //factory, 8 unit types
 		];
 
 		public $monchar = [
@@ -1225,37 +1261,64 @@
 			138 => 'Wizard\'s Well',
 			139 => 'Ring of the Magi',
 			140 => 'Cornucopia',
+
 			//WOG
-			141 => 'Magic Wand *',
-			142 => 'Gold Tower Arrow *',
-			143 => 'Monster\'s Power *',
-			144 => 'Highlighted Slot **',
-			145 => 'Artifact Lock **',
-			146 => 'Axe of Smashing ***',
-			147 => 'Mithril Mail ***',
-			148 => 'Sword of Sharpness ***',
-			149 => 'Helm of Immortality ***',
-			150 => 'Pendant of Sorcery ***',
-			151 => 'Boots of Haste ***',
-			152 => 'Bow of Seeking ***',
-			153 => 'Dragon Eye Ring ***',
-			154 => 'Hardened Shield ***',
-			155 => 'Slava\'s Ring of Power ***',
-			156 => 'Warlord\'s banner *',
-			157 => 'Crimson Shield of Retribution *',
-			158 => 'Barbarian Lord\'s Axe of Ferocity *',
-			159 => 'Dragonheart *',
-			160 => 'Gate Key *',
-			161 => 'Blank Helmet ****',
-			162 => 'Blank Sword ****',
-			163 => 'Blank Shield ****',
-			164 => 'Blank Horned Ring ****',
-			165 => 'Blank Gemmed Ring ****',
-			166 => 'Blank Neck Broach ****',
-			167 => 'Blank Armor ****',
-			168 => 'Blank Surcoat ****',
-			169 => 'Blank Boots ****',
-			170 => 'Blank Horn ****',
+			141 => 'Magic Wand',
+			142 => 'Gold Tower Arrow',
+			143 => 'Monster\'s Power',
+			144 => 'Highlighted Slot',
+			145 => 'Artifact Lock',
+			146 => 'Axe of Smashing',
+			147 => 'Mithril Mail',
+			148 => 'Sword of Sharpness',
+			149 => 'Helm of Immortality',
+			150 => 'Pendant of Sorcery',
+			151 => 'Boots of Haste',
+			152 => 'Bow of Seeking',
+			153 => 'Dragon Eye Ring',
+			154 => 'Hardened Shield',
+			155 => 'Slava\'s Ring of Power',
+			156 => 'Warlord\'s banner',
+			157 => 'Crimson Shield of Retribution',
+			158 => 'Barbarian Lord\'s Axe of Ferocity',
+			159 => 'Dragonheart',
+			160 => 'Gate Key',
+			161 => 'Blank Helmet',
+			162 => 'Blank Sword',
+			163 => 'Blank Shield',
+			164 => 'Blank Horned Ring',
+			165 => 'Blank Gemmed Ring',
+			166 => 'Blank Neck Broach',
+			167 => 'Blank Armor',
+			168 => 'Blank Surcoat',
+			169 => 'Blank Boots',
+			170 => 'Blank Horn',
+		];
+
+		//HOTA
+		public $ArtefactsHota = [
+			141 => 'Diplomat\'s Cloak',
+			142 => 'Pendant of Reflection',
+			143 => 'Ironfist of the Ogre',
+			147 => 'Trident of Dominion',
+			148 => 'Shield of Naval Glory',
+			149 => 'Royal Armor of Nix',
+			150 => 'Crown of the Five Seas',
+			151 => 'Wayfarer\'s Boots',
+			152 => 'Runes of Imminency',
+			153 => 'Demon\'s Horseshoe',
+			154 => 'Shaman\'s Puppet',
+			155 => 'Hideous Mask',
+			156 => 'Ring of Suppression',
+			157 => 'Pendant of Downfall',
+			158 => 'Ring of Oblivion',
+			159 => 'Cape of Silence',
+			160 => 'Golden Goose',
+			161 => 'Horn of the Abyss',
+			162 => 'Charm of Eclipse',
+			163 => 'Seal of Sunset',
+			164 => 'Plate of Dying Light',
+			165 => 'Sleepkeeper',
 		];
 
 		public $HeroClass = [
@@ -1277,12 +1340,11 @@
 			15 => 'Witch',
 			16 => 'PlanesWalker',
 			17 => 'Elementalist',
-			18 => 'additional heroes 2',
-			19 => 'additional heroes 1',
-			20 => 'Captain',
-			21 => 'Navigator',
-			22 => 'HOTA extra',
-			31 => 'Random',
+			18 => 'Captain',
+			19 => 'Navigator',
+			20 => 'Mercenary',
+			21 => 'Artificer',
+			22 => 'Random',
 		];
 
 
@@ -1450,20 +1512,21 @@
 			142 => 'Gelare',
 			143 => 'Grindan',
 			//Extension Heroes
-			144 => 'Sir Mullich',
-			145 => 'Adrienne',
-			146 => 'Catherine',
-			147 => 'Dracon',
-			148 => 'Gelu',
-			149 => 'Kilgor',
-			150 => 'Lord Haart',
-			151 => 'Mutare',
-			152 => 'Roland',
-			153 => 'Mutare Drake',
-			154 => 'Boragus',
-			155 => 'Xeron',
+			144 => 'Sir Mullich', //knight
+			145 => 'Adrienne', //witch
+			146 => 'Catherine', //knight
+			147 => 'Dracon', //wizard
+			148 => 'Gelu', //ranger
+			149 => 'Kilgor', //barbarian
+			150 => 'Lord Haart', //death knight
+			151 => 'Mutare',  //overlord
+			152 => 'Roland', //knight
+			153 => 'Mutare Drake',  //overlord
+			154 => 'Boragus', //barbarian
+			155 => 'Xeron', //demoniac
 
 			//HOTA
+			//Captain
 			156 => 'Corkes',
 			157 => 'Jeremy',
 			158 => 'Illor',
@@ -1472,27 +1535,85 @@
 			161 => 'Anabel',
 			162 => 'Cassiopeia',
 			163 => 'Miriam',
-			164 => 'Bidley',
-			165 => 'Tark',
-			166 => 'Elmore',
-			167 => 'Casmetra',
+			//Navigator
+			164 => 'Casmetra',
+			165 => 'Eovacius',
+			166 => 'Spint',
+			167 => 'Andal',
 			168 => 'Manfred',
-			169 => 'Spint',
-			170 => 'Andal',
-			171 => 'Dargem',
-			172 => 'Zilare',
-			173 => 'Astra',
-			174 => 'Eovacius',
-			175 => 'Beatrice',
-			176 => 'Kinkeria',
-			177 => 'Ranloo',
+			169 => 'Zilare',
+			170 => 'Astra',
+			//extra
+			171 => 'Dargem', //navigator
+			172 => 'Bidley', //captain
+			173 => 'Tark', //captain
+			174 => 'Elmore', //captain
+			175 => 'Beatrice', //knight
+			176 => 'Kinkeria', //witch
+			177 => 'Ranloo', //death knight
+			178 => 'Giselle', //ranger
+			//Mercenary
+			179 => 'Henrietta',
+			180 => 'Sam',
+			181 => 'Tancred',
+			182 => 'Melchior',
+			183 => 'Floribert',
+			184 => 'Wynona',
+			185 => 'Dury',
+			186 => 'Morton',
+			//Artificer
+			187 => 'Celestine',
+			188 => 'Todd',
+			189 => 'Agar',
+			190 => 'Bertram',
+			191 => 'Wrathmont',
+			192 => 'Ziph',
+			193 => 'Victoria',
+			194 => 'Eanswythe',
+			//factory campaign heroes
+			195 => 'Frederick', //*
+			196 => 'Tavin', //*
+			197 => 'Murdoch', //*
 
 			255 => 'Random',
 			65533 => 'Most Powerful Hero'
 		];
 
+		//heroes class: heroid => classid
+		public $HeroesClass = [
+			0, 0, 0, 0, 0, 0, 0, 0, //Knights  0-7
+			1, 1, 1, 1, 1, 1, 1, 1, //Clerics  8-15
+			2, 2, 2, 2, 2, 2, 2, 2, //Rangers 16-23
+			3, 3, 3, 3, 3, 3, 3, 3, //Druids 24-31
+			4, 4, 4, 4, 4, 4, 4, 4, //Alchemists 32-39
+			5, 5, 5, 5, 5, 5, 5, 5, //Wizards 40-47
+			6, 6, 6, 6, 6, 6, 6, 6, //Demoniacs 48-55
+			7, 7, 7, 7, 7, 7, 7, 7, //Heretics 56-63
+			8, 8, 8, 8, 8, 8, 8, 8, //Death Knights 64-71
+			9, 9, 9, 9, 9, 9, 9, 9, //Necromancers 72-79
+			10, 10, 10, 10, 10, 10, 10, 10, //Overlords 80-87
+			11, 11, 11, 11, 11, 11, 11, 11, //Warlocks 88-95
+			12, 12, 12, 12, 12, 12, 12, 12, //Barbarians 96-103
+			13, 13, 13, 13, 13, 13, 13, 13, //Battle Mages 104-111
+			14, 14, 14, 14, 14, 14, 14, 14, //Beastmasters 112-119
+			15, 15, 15, 15, 15, 15, 15, 15, //Witches 120-127
+			16, 16, 16, 16, 16, 16, 16, 16, //Planeswalkers 128-135
+			17, 17, 17, 17, 17, 17, 17, 17, //Elementalists 136-143
+			0, 15, 0, 5, 2, 12, 8, 10, 0, 10, 12, 6, //SOD extra heroes 144-155
+
+			//HOTA
+			18, 18, 18, 18, 18, 18, 18, 18, //Captain 156-163
+			19, 19, 19, 19, 19, 19, 19, 19, //Navigator 164-171
+			18, 18, 18, 0, 15, 8, //HOTA extra heroes 172-177
+			2, //178 ranger
+			20, 20, 20, 20, 20, 20, 20, 20, //Mercenary 179-186
+			21, 21, 21, 21, 21, 21, 21, 21, //Artificer 187-194
+			21, 20, 20, //factory campaign 195-197
+		];
+
 		public $Buildings = [
-			0 => 'Town hall',
+			//byte 0
+			0 => 'Town hall',  
 			1 => 'City hall',
 			2 => 'Capitol',
 			3 => 'Fort',
@@ -1500,14 +1621,15 @@
 			5 => 'Castle',
 			6 => 'Tavern',
 			7 => 'Blacksmith',
+			//byte 1
 			8 => 'Marketplace',
 			9 => 'Resource silo',
-
 			11 => 'Mages guild 1',
 			12 => 'Mages guild 2',
 			13 => 'Mages guild 3',
 			14 => 'Mages guild 4',
 			15 => 'Mages guild 5',
+			//byte 2
 			16 => 'Shipyard',
 			17 => 'Grail',
 			18 => 'Special 1',
@@ -1516,6 +1638,7 @@
 			21 => 'Special 4',
 			22 => 'Dwelling lvl 1',
 			23 => 'Dwelling lvl 1 upg',
+			//byte 3
 			24 => 'Horde lvl 1',
 			25 => 'Dwelling lvl 2',
 			26 => 'Dwelling lvl 2 upg',
@@ -1524,6 +1647,7 @@
 			29 => 'Dwelling lvl 3 upg',
 			30 => 'Horde lvl 3',
 			31 => 'Dwelling lvl 4',
+			//byte 4
 			32 => 'Dwelling lvl 4 upg',
 			33 => 'Horde lvl 4',
 			34 => 'Dwelling lvl 5',
@@ -1532,7 +1656,51 @@
 			37 => 'Dwelling lvl 6',
 			38 => 'Dwelling lvl 6 upg',
 			39 => 'Dwelling lvl 7',
+			//byte 5
 			40 => 'Dwelling lvl 7 upg',
+		];
+		
+		public $MonolithsOne = [
+			0 => 'Blue',
+			1 => 'Pink',
+			2 => 'Orange',
+			3 => 'Yellow',
+			4 => 'Purple portal',
+			5 => 'Orange portal',
+			6 => 'Red portal',
+			7 => 'Cyan portal',
+			8 => 'Turquoise',
+			9 => 'Violet',
+			10 => 'Chartreuse',
+			11 => 'White',
+		];
+		
+		public $MonolithsTwo = [
+			0 => 'Green',
+			1 => 'Brown',
+			2 => 'Violet',
+			3 => 'Orange',
+			4 => 'Green portal',
+			5 => 'Yellow portal',
+			6 => 'Red portal',
+			7 => 'Cyan portal',
+			8 => 'White sea portal',
+			9 => 'Pink',
+			10 => 'Turquoise',
+			11 => 'Yellow',
+			12 => 'Black',
+			13 => 'Chartreuse portal',
+			14 => 'Turquoise portal',
+			15 => 'Violet portal',
+			16 => 'Orange portal',
+			17 => 'Blue',
+			18 => 'Red',
+			19 => 'Pink portal',
+			20 => 'Blue portal',
+			21 => 'Red sea portal',
+			22 => 'Blue sea portal',
+			23 => 'Green sea portal',
+			24 => 'Yellow sea portal',
 		];
 
 		public $Experience = [

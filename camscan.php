@@ -5,9 +5,8 @@ require_once 'fun/mi.php';
 require_once 'fun/config.php';
 
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="cz" xml:lang="cz">
-<head>
+<!DOCTYPE html>
+<html lang="cs"><head>
 	<title>Cam Scanner</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8;" />
 <style>
@@ -54,7 +53,7 @@ $scan->SetFilter(array('h3c'));
 $scan->scansubdirs(MAPDIR);
 $files = $scan->GetFiles();*/
 
-$num = 16;
+$num = 24;
 
 $n = exget('n');
 if($n) {
@@ -86,6 +85,7 @@ $cam = [
 	21 => 'H2Terror.h3c',
 	22 => 'H3Horn.h3c',
 	23 => 'siege_war_1723.h3c',
+	24 => 'H4Fact.h3c',
 ];
 
 $camfile = $cam[$num];
@@ -97,7 +97,7 @@ H3C_CAMHTMCACHE
 */
 
 $mapfile = MAPDIRCAM.$camfile;
-$map = new H3CAMSCAN($mapfile, H3C_PRINTINFO | H3C_SAVECAMDB | H3C_EXPORTMAPS); // | H3C_CAMHTMCACHE
+$map = new H3CAMSCAN($mapfile, H3C_PRINTINFO | H3C_EXPORTMAPS | H3C_SCENARIOMAPS);
 $map->ReadCAM();
 $map->ReadMaps();
 

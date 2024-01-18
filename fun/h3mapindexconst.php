@@ -1,5 +1,8 @@
 <?php
-	class VICTORY {
+
+	//victory and loss class constants for maplist and form, so we dont have to load whole H3 constats file
+
+	class VICTORYi {
 		const ARTIFACT = 0;
 		const ACCCREATURES = 1;
 		const ACCRESOURCES = 2;
@@ -16,7 +19,7 @@
 		const NONE = 0xff;
 	}
 
-	class LOSS {
+	class LOSSi {
 		const TOWN = 0;
 		const HERO = 1;
 		const TIME = 2;
@@ -24,27 +27,27 @@
 	}
 
 	$VICTORY = [
-		VICTORY::NONE => 'Standard',
-		VICTORY::ARTIFACT => 'Acquire a specific artifact',
-		VICTORY::ACCCREATURES => 'Accumulate creatures',
-		VICTORY::ACCRESOURCES => 'Accumulate resources',
-		VICTORY::UPGRADETOWN => 'Upgrade a specific town',
-		VICTORY::BUILDGRAIL => 'Build the grail structure',
-		VICTORY::DEFEATHERO => 'Defeat a specific Hero',
-		VICTORY::CAPTURETOWN => 'Capture a specific town',
-		VICTORY::KILLMONSTER => 'Defeat a specific monster',
-		VICTORY::FLAGWELLINGS => 'Flag all creature dwelling',
-		VICTORY::FLAGMINES => 'Flag all mines',
-		VICTORY::TRANSPORTART => 'Transport a specific artifact',
-		VICTORY::ELIMINATEMONSTERS => 'Eliminate all monsters',
-		VICTORY::SURVIVETIME => 'Survive for certain time',
+		VICTORYi::NONE => 'Standard',
+		VICTORYi::ARTIFACT => 'Acquire a specific artifact',
+		VICTORYi::ACCCREATURES => 'Accumulate creatures',
+		VICTORYi::ACCRESOURCES => 'Accumulate resources',
+		VICTORYi::UPGRADETOWN => 'Upgrade a specific town',
+		VICTORYi::BUILDGRAIL => 'Build the grail structure',
+		VICTORYi::DEFEATHERO => 'Defeat a specific Hero',
+		VICTORYi::CAPTURETOWN => 'Capture a specific town',
+		VICTORYi::KILLMONSTER => 'Defeat a specific monster',
+		VICTORYi::FLAGWELLINGS => 'Flag all creature dwelling',
+		VICTORYi::FLAGMINES => 'Flag all mines',
+		VICTORYi::TRANSPORTART => 'Transport a specific artifact',
+		VICTORYi::ELIMINATEMONSTERS => 'Eliminate all monsters',
+		VICTORYi::SURVIVETIME => 'Survive for certain time',
 	];
 
 	$LOSS = [
-		LOSS::NONE => 'None',
-		LOSS::TOWN => 'Lose a specific town',
-		LOSS::HERO => 'Lose a specific hero',
-		LOSS::TIME => 'Time expires',
+		LOSSi::NONE => 'None',
+		LOSSi::TOWN => 'Lose a specific town',
+		LOSSi::HERO => 'Lose a specific hero',
+		LOSSi::TIME => 'Time expires',
 	];
 
 
