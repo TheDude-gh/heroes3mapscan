@@ -1300,6 +1300,7 @@
 			141 => 'Diplomat\'s Cloak',
 			142 => 'Pendant of Reflection',
 			143 => 'Ironfist of the Ogre',
+			146 => 'Cannon',
 			147 => 'Trident of Dominion',
 			148 => 'Shield of Naval Glory',
 			149 => 'Royal Armor of Nix',

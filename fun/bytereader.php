@@ -2,9 +2,9 @@
 
 const MAXINT32 = 0x80000000; //1 << 31;
 const MININT32 = 0x100000000; //1 << 32; //without minus
-	
+
 class ByteReader {
-	
+
 	public $pos = 0;
 	public $length = 0;
 	public $data;
@@ -16,11 +16,11 @@ class ByteReader {
 		$this->pos = 0;
 		$this->length = strlen($this->data);
 	}
-	
+
 	public function ReadUint8() {
 		if($this->pos >= $this->length) {
 			dbglog();
-			throw new Exception('Bad position '.$this->pos);
+			throw new Exception('Bad position 0x'.dechex($this->pos).' '.$this->pos);
 			return;
 		}
 		return ord($this->data[$this->pos++]);
@@ -28,7 +28,7 @@ class ByteReader {
 
 	public function ReadUint16() {
 		if($this->pos >= $this->length - 1) {
-			throw new Exception('Bad position '.$this->pos);
+			throw new Exception('Bad position 0x'.dechex($this->pos).' '.$this->pos);
 			return;
 		}
 
@@ -39,7 +39,7 @@ class ByteReader {
 
 	public function ReadUint32() {
 		if($this->pos >= $this->length - 3) {
-			throw new Exception('Bad position '.$this->pos);
+			throw new Exception('Bad position 0x'.dechex($this->pos).' '.$this->pos);
 			return;
 		}
 
@@ -52,7 +52,7 @@ class ByteReader {
 
 	public function ReadInt8() {
 		if($this->pos >= $this->length) {
-			throw new Exception('Bad position '.$this->pos);
+			throw new Exception('Bad position 0x'.dechex($this->pos).' '.$this->pos);
 			return;
 		}
 		$res  = ord($this->data[$this->pos++]);
@@ -64,7 +64,7 @@ class ByteReader {
 
 	public function ReadInt32() {
 		if($this->pos >= $this->length - 3) {
-			throw new Exception('Bad position '.$this->pos);
+			throw new Exception('Bad position 0x'.dechex($this->pos).' '.$this->pos);
 			return;
 		}
 
@@ -83,7 +83,7 @@ class ByteReader {
 		if($this->pos >= $this->length) {
 			dbglog();
 			$this->data = null;
-			throw new Exception('Bad string pos '.$this->pos);
+			throw new Exception('Bad string pos 0x'.dechex($this->pos).' '.$this->pos);
 			return;
 		}
 

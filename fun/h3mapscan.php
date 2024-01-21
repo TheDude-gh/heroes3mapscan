@@ -249,7 +249,7 @@ class H3MAPSCAN {
 
 	//return true on valid version, false otherwise
 	private function CheckVersion() {
-		return (in_array($this->version, [$this::ROE, $this::AB, $this::SOD, $this::WOG, $this::HOTA]) && ($this->version == $this::HOTA && $this->hota_subrev <= $this::HOTA_SUBREV5));
+		return (in_array($this->version, [$this::ROE, $this::AB, $this::SOD, $this::WOG]) || ($this->version == $this::HOTA && $this->hota_subrev <= $this::HOTA_SUBREV5));
 	}
 
 	private function SaveMap() {
@@ -3036,7 +3036,7 @@ class H3MAPSCAN {
 
 		$header = unpack('V', $gzipheader); //ulong 32 bit LE
 		$header = end($header);
-		if($header == 0x00088b1f) {
+		if($header == 0x00088b1f || $header == 0x08088b1f) { //possibly also 0x08088b1f
 			$this->isGzip = true;
 		}
 		else {
