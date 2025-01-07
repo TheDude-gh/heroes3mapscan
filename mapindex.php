@@ -200,7 +200,7 @@ function MakeTableFromSQL($sql) {
 	echo '<table class="smalltable">';
 	$n = 0;
 	$ncol = 0;
-	$namecol = array();
+	$namecol = [];
 	$query = mq($sql);
 	while($res = mfa($query)) {
 		if($n == 0) {

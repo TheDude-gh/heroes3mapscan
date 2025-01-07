@@ -3,27 +3,27 @@
 	//victory and loss class constants for maplist and form, so we dont have to load whole H3 constats file
 
 	class VICTORYi {
-		const ARTIFACT = 0;
-		const ACCCREATURES = 1;
-		const ACCRESOURCES = 2;
-		const UPGRADETOWN = 3;
-		const BUILDGRAIL = 4;
-		const DEFEATHERO = 5;
-		const CAPTURETOWN = 6;
-		const KILLMONSTER = 7;
-		const FLAGWELLINGS = 8;
-		const FLAGMINES = 9;
-		const TRANSPORTART = 10;
-		const ELIMINATEMONSTERS = 11;
-		const SURVIVETIME = 12;
-		const NONE = 0xff;
+		public const ARTIFACT = 0;
+		public const ACCCREATURES = 1;
+		public const ACCRESOURCES = 2;
+		public const UPGRADETOWN = 3;
+		public const BUILDGRAIL = 4;
+		public const DEFEATHERO = 5;
+		public const CAPTURETOWN = 6;
+		public const KILLMONSTER = 7;
+		public const FLAGWELLINGS = 8;
+		public const FLAGMINES = 9;
+		public const TRANSPORTART = 10;
+		public const ELIMINATEMONSTERS = 11;
+		public const SURVIVETIME = 12;
+		public const NONE = 0xff;
 	}
 
 	class LOSSi {
-		const TOWN = 0;
-		const HERO = 1;
-		const TIME = 2;
-		const NONE = 0xff;
+		public const TOWN = 0;
+		public const HERO = 1;
+		public const TIME = 2;
+		public const NONE = 0xff;
 	}
 
 	$VICTORY = [

@@ -8,16 +8,16 @@ const CAM_ARTIFACT_QUANTITY      = 144; //ROE,AB,SOD,WOG
 const CAM_ARTIFACT_QUANTITY_HOTA = 166; //HOTA
 
 class CAMBONUS {
-	const SPELL           = 0;
-	const MONSTER         = 1;
-	const BUILDING        = 2;
-	const ARTIFACT        = 3;
-	const SPELL_SCROLL    = 4;
-	const PRIMARY_SKILL   = 5;
-	const SECONDARY_SKILL = 6;
-	const RESOURCE        = 7;
-	const HEROES_PREVIOUS = 8;
-	const HERO            = 9;
+	public const SPELL           = 0;
+	public const MONSTER         = 1;
+	public const BUILDING        = 2;
+	public const ARTIFACT        = 3;
+	public const SPELL_SCROLL    = 4;
+	public const PRIMARY_SKILL   = 5;
+	public const SECONDARY_SKILL = 6;
+	public const RESOURCE        = 7;
+	public const HEROES_PREVIOUS = 8;
+	public const HERO            = 9;
 }
 
 class CampaignConstants {

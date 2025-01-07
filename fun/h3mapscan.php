@@ -13,18 +13,19 @@ const H3M_SPECIALACCESS = 0x0080; //displays some objects on map in different co
 const H3M_TERRAINONLY   = 0x0100; //reads basic info and terrain only
 
 class H3MAPSCAN {
-	const IMGSIZE = 576;
-	const ROE  = 0x0e;
-	const AB   = 0x15;
-	const SOD  = 0x1c;
-	const WOG  = 0x33;
-	const HOTA = 0x20;
+	public const IMGSIZE = 576;
+	public const ROE  = 0x0e;
+	public const AB   = 0x15;
+	public const SOD  = 0x1c;
+	public const WOG  = 0x33;
+	public const HOTA = 0x20;
 
-	const HOTA_SUBREV1 = 1;
-	const HOTA_SUBREV2 = 2;
-	const HOTA_SUBREV3 = 3;
-	const HOTA_SUBREV4 = 4;
-	const HOTA_SUBREV5 = 5;
+	public const HOTA_SUBREV1 = 1;
+	public const HOTA_SUBREV2 = 2;
+	public const HOTA_SUBREV3 = 3;
+	public const HOTA_SUBREV4 = 4;
+	public const HOTA_SUBREV5 = 5;
+	public const HOTA_SUBREV6 = 6;
 
 	//variables to simplify version checks
 	private $isROE   = false;
@@ -249,13 +250,13 @@ class H3MAPSCAN {
 
 	//return true on valid version, false otherwise
 	private function CheckVersion() {
-		return (in_array($this->version, [$this::ROE, $this::AB, $this::SOD, $this::WOG]) || ($this->version == $this::HOTA && $this->hota_subrev <= $this::HOTA_SUBREV5));
+		return (in_array($this->version, [$this::ROE, $this::AB, $this::SOD, $this::WOG]) || ($this->version == $this::HOTA && $this->hota_subrev <= $this::HOTA_SUBREV6));
 	}
 
 	private function SaveMap() {
 		$mapfile = mes($this->mapfile);
 
-		$sql = "SELECT m.mapfile FROM heroes3_maps AS m WHERE m.mapfile='$mapfile' AND md5='".$this->md5hash."'";
+		$sql = "SELECT m.mapfile FROM heroes3_maps AS m WHERE m.mapfile='$mapfile' AND `md5`='".$this->md5hash."'";
 		$mapdb = mgr($sql);
 		if($mapdb) {
 			return;
@@ -365,7 +366,7 @@ class H3MAPSCAN {
 				$this->hota_arena = $this->br->ReadUint8(); //arena
 			}
 			if($this->hota_subrev >= $this::HOTA_SUBREV2) {
-				$this->terrain_count = $this->br->ReadUint32();
+				$terrain_count = $this->br->ReadUint32();
 			}
 			if($this->hota_subrev >= $this::HOTA_SUBREV4) {
 				$town_type_count = $this->br->ReadInt32();
@@ -528,7 +529,7 @@ class H3MAPSCAN {
 					}
 				}
 			}
-			$this->players[$i]['towns_allowed'] = implode($towns_allowed, ', ');
+			$this->players[$i]['towns_allowed'] = implode(', ', $towns_allowed);
 
 			$this->players[$i]['IsRandomTown'] = $this->br->ReadUint8();
 			$this->players[$i]['HasMainTown'] = $this->br->ReadUint8();
@@ -1543,6 +1544,9 @@ class H3MAPSCAN {
 						$event['availableFor'] = $this->br->ReadUint8();
 						$event['computerActivate'] = $this->br->ReadUint8();
 						$event['removeAfterVisit'] = $this->br->ReadUint8();
+
+						$this->br->SkipBytes(4);
+
 						if($this->hota_subrev >= $this::HOTA_SUBREV3) {
 							$event['humanActivate'] = $this->br->ReadUint8();
 						}
@@ -1553,8 +1557,10 @@ class H3MAPSCAN {
 							$event['move_bonus_type'] = $this->br->ReadUint32();
 							$event['move_bonus_value'] = $this->br->ReadUint32();
 						}
+						if($this->hota_subrev >= $this::HOTA_SUBREV6) {
+							$event['dif_present'] = $this->br->ReadUint32();
+						}
 
-						$this->br->SkipBytes(4);
 					}
 					else { //pandora
 						$event['availableFor'] = HNONE;
@@ -1565,6 +1571,9 @@ class H3MAPSCAN {
 							$event['humanActivate'] = $this->br->ReadUint8();
 							$event['move_bonus_type'] = $this->br->ReadUint32();
 							$event['move_bonus_value'] = $this->br->ReadUint32();
+						}
+						if($this->hota_subrev >= $this::HOTA_SUBREV6) {
+							$event['dif_present'] = $this->br->ReadUint32();
 						}
 					}
 
@@ -2264,10 +2273,10 @@ class H3MAPSCAN {
 
 		$town['spells'] = '';
 		if(!empty($town['spellsA'])) {
-			$town['spells'] .= 'Always: '.implode($town['spellsA'], ', ');
+			$town['spells'] .= 'Always: '.implode(', ', $town['spellsA']);
 		}
 		if(!empty($town['spellsD'])) {
-			$town['spells'] .= '<br />Disabled: '.implode($town['spellsD'], ', ');
+			$town['spells'] .= '<br />Disabled: '.implode(', ', $town['spellsD']);
 		}
 
 		if($this->hota_subrev >= $this::HOTA_SUBREV1) {
@@ -2478,7 +2487,7 @@ class H3MAPSCAN {
 						$resall[] = $this->GetResourceById($x).': '.$count;
 					}
 				}
-				$quest['Qtext'] = 'Resource:<br />'.implode($resall, '<br />');
+				$quest['Qtext'] = 'Resource:<br />'.implode('<br />', $resall);
 				break;
 			case QUESTMISSION::HERO:
 				$quest['Qhero'] = $this->br->ReadUint8();
@@ -2504,7 +2513,7 @@ class H3MAPSCAN {
 									}
 								}
 							}
-							$quest['Qtext'] = 'Be class: '.implode($class, ', ');
+							$quest['Qtext'] = 'Be class: '.implode(', ', $class);
 						}
 					}
 					elseif($hotaquestid == QUESTMISSION::HOTA_NOTBEFORE) {
@@ -2681,7 +2690,7 @@ class H3MAPSCAN {
 		$spellid = $this->br->ReadInt32();
 
 		if($spellid != HOTA_RANDOM) {
-			$object_name = $object ? $object : $this->GetObjectById($this->curobj);
+			$object_name = $object ?: $this->GetObjectById($this->curobj);
 			$this->spells_list[] = new ListObject($this->GetSpellById($spellid), $this->curcoor, $object_name);
 		}
 	}
@@ -2691,7 +2700,7 @@ class H3MAPSCAN {
 		$artid = $this->br->ReadInt32();
 
 		if($artid != HOTA_RANDOM) {
-			$object_name = $object ? $object : $this->GetObjectById($this->curobj);
+			$object_name = $object ?: $this->GetObjectById($this->curobj);
 			$this->artifacts_list[] = new ListObject($this->GetArtifactById($artid), $this->curcoor, $object_name);
 		}
 
@@ -3238,7 +3247,7 @@ function SortTownEventsByDate($a, $b) {
 
 function KeyMasterSort($a, $b) {
 	$res = $a['id'] <=> $b['id'];
-	return $res ? $res : $a['subid'] <=> $b['subid'];
+	return $res ?: $a['subid'] <=> $b['subid'];
 }
 
 ?>

@@ -11,8 +11,8 @@ function FromArray($key, $array, $def = '?') {
 }
 
 class ScanSubDir {
-	public $files = array();
-	private $filter = array();
+	public $files = [];
+	private $filter = [];
 	private $scansubdirs = true;
 
 	public function SetFilter($filter) {
@@ -161,17 +161,17 @@ class TimeMeasure {
 	private $start;
 	private $prev = 0;
 	private $now;
-	private $times = array();
+	private $times = [];
 
 	public function __construct () {
 		$this->start = tmc();
-		$this->times[] = array('start', $this->start);
+		$this->times[] = ['start', $this->start];
 	}
 
 	public function Measure($desc = ''){
 		$this->prev = $this->prev == 0 ? $this->start : $this->now;
 		$this->now = tmc();
-		$this->times[] = array($desc, $this->now);
+		$this->times[] = [$desc, $this->now];
 	}
 
 	public function ShowTime($print = 1, $pos = -1, $text = '') {
@@ -193,7 +193,7 @@ class TimeMeasure {
 		$prev = $this->start;
 		echo '<table>';
 		foreach($this->times as $timed) {
-			list($desc, $time) = $timed;
+			[$desc, $time] = $timed;
 			echo '<tr><td>'.$desc.'</td><td>'.sprintf('%4.3f s</td><td>%4.3f s', ($time - $prev), ($time - $this->start)).'</td></tr>';
 			$prev = $time;
 		}

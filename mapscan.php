@@ -75,7 +75,7 @@ if($mapid) {
 }
 elseif($scan) {
 	$scan = new ScanSubDir();
-	$scan->SetFilter(array('h3m'));
+	$scan->SetFilter(['h3m']);
 	$scan->scansubdirs(MAPDIR);
 	$files = $scan->GetFiles();
 
@@ -85,9 +85,9 @@ elseif($scan) {
 
 		$displayed = 0;
 		$maplist = '';
-		$maplistjs = array();
+		$maplistjs = [];
 
-		$mapdbs = array();
+		$mapdbs = [];
 		$sql = "SELECT m.mapfile, m.idm FROM heroes3_maps AS m";
 		$query = mq($sql);
 		while($res = mfa($query)) {
@@ -125,7 +125,7 @@ elseif($scan) {
 			}
 			echo '<p id="mapreadstate"></p>';
 			echo '<p id="maplist"></p>';
-			echo '<script type="text/javascript">'.EOL.'var maplist = ['.EOL.TAB.'"'.implode($maplistjs, '",'.EOL.TAB.'"').'"'.EOL.']'.EOL.'</script>';
+			echo '<script type="text/javascript">'.EOL.'var maplist = ['.EOL.TAB.'"'.implode('",'.EOL.TAB.'"', $maplistjs).'"'.EOL.']'.EOL.'</script>';
 		}
 
 	}

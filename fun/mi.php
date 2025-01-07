@@ -16,31 +16,31 @@
 		$db_link = false;
 	}
 
-	function file_write($filename, $data){
+	function file_write($filename, $data) {
 		return file_put_contents($filename, $data);
 	}
 
-	function file_append($filename, $data){
+	function file_append($filename, $data) {
 		return file_put_contents($filename, $data, FILE_APPEND);
 	}
 
-	function expost($name, $def = null){
-		return isSet($_POST[$name]) ? $_POST[$name] : $def;
+	function expost($name, $def = null) {
+		return $_POST[$name] ?? $def;
 	}
 
-	function exget($name, $def = null){
-		return isSet($_GET[$name]) ? $_GET[$name] : $def;
+	function exget($name, $def = null) {
+		return $_GET[$name] ?? $def;
 	}
 
-	function excookie($name, $def = null){
-		return isSet($_COOKIE[$name]) ? $_COOKIE[$name] : $def;
+	function excookie($name, $def = null) {
+		return $_COOKIE[$name] ?? $def;
 	}
 
-	function SetDef($var, $def = null){
+	function SetDef($var, $def = null) {
 		if(!$var) $var = $def;
 	}
 
-	function use_cache($cache_file, $cache_period){
+	function use_cache($cache_file, $cache_period) {
 		if(isSet($_GET['rc'])) {
 			return false;
 		}
@@ -50,7 +50,7 @@
 		return false; //make new
 	}
 
-	function mq($sql){
+	function mq($sql) {
 		$qres = mysqli_query(db_link(), $sql);
 		if(!$qres) {
 			mlog($sql);
@@ -58,42 +58,42 @@
 		return $qres;
 	}
 
-	function mfa($query){
+	function mfa($query) {
 		return mysqli_fetch_array($query, MYSQLI_BOTH);
 	}
 
-	function mfr($query){
+	function mfr($query) {
 		return mysqli_fetch_array($query, MYSQLI_NUM);
 	}
 
-	function mfs($query){
+	function mfs($query) {
 		return mysqli_fetch_array($query, MYSQLI_ASSOC);
 	}
 
-	function mgr($sql){ //mysql get result - for one value results
-		@$res = mfa(mq($sql));
-		return $res[0];
+	function mgr($sql) { //mysql get result - for one value results
+		@$res = mysqli_fetch_array(mq($sql), MYSQLI_BOTH);
+		return $res ? $res[0] : null;
 	}
 
-	function mgrow($sql){ //mysql get row - for one row result
-		@$res = mfa(mq($sql));
+	function mgrow($sql, $type = MYSQLI_ASSOC) { //mysql get row - for one row result
+		@$res = mysqli_fetch_array(mq($sql), $type);
 		return $res;
 	}
 
-	function me(){
+	function me() {
 		$me = mysqli_error(db_link());
 		if($me) echo '<p style="border:solid 1px #f00;">'.$me.'</p>';
 	}
 
-	function mes($string){
+	function mes($string) {
 		return mysqli_real_escape_string(db_link(), $string);
 	}
 
-	function mar(){
+	function mar() {
 		return mysqli_affected_rows(db_link());
 	}
 
-	function mii(){
+	function mii() {
 		return mysqli_insert_id(db_link());
 	}
 
@@ -101,7 +101,7 @@
 		mysqli_select_db(db_link(), $dbname);
 	}
 
-	function mlog($sql){
+	function mlog($sql) {
 		$me = mysqli_error(db_link());
 		if(LOCAL) {
 			echo $me.'<br /><br />';
@@ -117,21 +117,21 @@
 		$time = date('Y-m-d H:i:s, ', time());
 		$dt = debug_backtrace();
 		$dbl = '';
-		if(array_key_exists(1, $dt)){
+		if(array_key_exists(1, $dt)) {
 			$dbl = $dt[1]['file'].', line:'.$dt[1]['line'].', func:'.$dt[1]['function'];
 		}
 		file_append($fmlog, $time.' '.$_SERVER['REQUEST_URI'].EOL.$dbl.EOL.$sql.EOL.$me.EOL.EOL);
 		//vd(error_get_last());
 	}
 
-	function sqlog($sql){
+	function sqlog($sql) {
 		static $count = 0;
 		if($count == 0) file_write('sqlog.sql', '');
 		$count++;
 		file_append('sqlog.sql', $count."\n".$sql."\n\n");
 	}
 
-	function comma($value, $round = 0){
+	function comma($value, $round = 0) {
 		return number_format($value, $round, '.', ',');
 	}
 
@@ -139,17 +139,17 @@
 		return str_pad($value, $len, $char, STR_PAD_LEFT);
 	}
 
-	function vd($var){
+	function vd($var) {
 		echo '<pre class="vardump">';
 		var_dump($var);
 		echo '</pre>';
 	}
 
-	function vdc($var){
+	function vdc($var) {
 		var_dump($var);
 	}
 
-	function pre($var){
+	function pre($var) {
 		echo '<pre class="vardump">'.$var.'</pre>';
 	}
 

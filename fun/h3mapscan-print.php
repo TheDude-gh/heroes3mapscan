@@ -111,8 +111,8 @@ class H3MAPSCAN_PRINT {
 					<td class="ac">'.$player['RandomHero'].'</td>
 					<td class="nowrap">'.$player['MainHeroName'].'</td>
 					<td class="ar">'.$player['HeroCount'].'</td>
-					<td>'.implode($player['HeroFace'], ', ').'</td>
-					<td>'.implode($player['HeroName'], ', ').'</td>
+					<td>'.implode(', ', $player['HeroFace']).'</td>
+					<td>'.implode(', ', $player['HeroName']).'</td>
 				</tr>';
 		}
 		$print .= '</table>';
@@ -165,7 +165,7 @@ class H3MAPSCAN_PRINT {
 			$print .= '<tr>
 				<td class="ac">'.(++$n).'</td>
 				<td>'.$class.'</td>
-				<td>'.implode($heroes, ', ').'</td>
+				<td>'.implode(', ', $heroes).'</td>
 			</tr>';
 		}
 		$print .= '</table>';
@@ -202,10 +202,10 @@ class H3MAPSCAN_PRINT {
 				<td class="ar">'.comma($hero['exp']).'</td>
 				<td class="ac">'.$hero['sex'].'</td>
 				<td>'.nl2br($hero['bio']).'</td>
-				<td>'.implode($hero['priskills'], ', ').'</td>
-				<td>'.implode($skills, '<br />').'</td>
-				<td>'.implode($hero['spells'], ', ').'</td>
-				<td>'.implode($hero['artifacts'], '<br />').'</td>
+				<td>'.implode(', ', $hero['priskills']).'</td>
+				<td>'.implode('<br />', $skills).'</td>
+				<td>'.implode(', ', $hero['spells']).'</td>
+				<td>'.implode('<br />', $hero['artifacts']).'</td>
 			</tr>';
 		}
 		$print .= '</table>';
@@ -301,7 +301,7 @@ class H3MAPSCAN_PRINT {
 
 			$class = $this->h3mapscan->GetHeroClassByHeroId($hero['data']['subid']);
 
-			$primary = implode($hero['data']['priskills'], ' ');
+			$primary = implode(' ', $hero['data']['priskills']);
 			$secondary = '';
 			foreach($hero['data']['skills'] as $k => $skill) {
 				if($k > 0) {
@@ -309,7 +309,7 @@ class H3MAPSCAN_PRINT {
 				}
 				$secondary .= $skill['skill'].': '.$skill['level'];
 			}
-			$artifacts = implode($hero['data']['artifacts'], '<br />');
+			$artifacts = implode('<br />', $hero['data']['artifacts']);
 
 			$level = $this->h3mapscan->GetLevelByExp($hero['data']['exp']);
 
@@ -326,7 +326,7 @@ class H3MAPSCAN_PRINT {
 				<td>'.$secondary.'</td>
 				<td>'.$this->h3mapscan->PrintStack($hero['data']['stack']).'</td>
 				<td>'.$artifacts.'</td>
-				<td>'.implode($hero['data']['spells'], '<br />').'</td>
+				<td>'.implode('<br />', $hero['data']['spells']).'</td>
 			</tr>';
 		}
 
@@ -341,7 +341,7 @@ class H3MAPSCAN_PRINT {
 				<td></td>
 				<td></td>
 				<td>'.$this->h3mapscan->PrintStack($hero['stack']).'</td>
-				<td>'.implode($hero['artifacts'], '<br />').'</td>
+				<td>'.implode('<br />', $hero['artifacts']).'</td>
 				<td></td>
 			</tr>';
 		}
@@ -540,9 +540,9 @@ class H3MAPSCAN_PRINT {
 						<td class="ac">'.$event['human'].'/'.$event['computerAffected'].'</td>
 						<td class="ac">'.$event['firstOccurence'].'</td>
 						<td class="ac">'.$event['nextOccurence'].'</td>
-						<td class="nowrap" nowrap="nowrap">'.implode($resources, '<br />').'</td>
-						<td class="nowrap" nowrap="nowrap">'.implode($monsters, '<br />').'</td>
-						<td>'.implode($buildings, '<br />').'</td>
+						<td class="nowrap" nowrap="nowrap">'.implode('<br />', $resources).'</td>
+						<td class="nowrap" nowrap="nowrap">'.implode('<br />', $monsters).'</td>
+						<td>'.implode('<br />', $buildings).'</td>
 						<td>'.nl2br($event['message']).'</td>
 					</tr>';
 			}
@@ -596,10 +596,10 @@ class H3MAPSCAN_PRINT {
 				$content[] = $skill['skill'].' = '.$skill['level'];
 			}
 			if(!empty($event['artifacts'])) {
-				$content[] = 'Artifacts: '.implode($event['artifacts'], ', ');
+				$content[] = 'Artifacts: '.implode(', ', $event['artifacts']);
 			}
 			if(!empty($event['spells'])) {
-				$content[] = 'Spells: '.implode($event['spells'], ', ');
+				$content[] = 'Spells: '.implode(', ', $event['spells']);
 			}
 			if(array_key_exists('stack', $event)) {
 				$content[] = $this->h3mapscan->PrintStack($event['stack']);
@@ -614,7 +614,7 @@ class H3MAPSCAN_PRINT {
 				<td class="ac">'.$event['humanActivate'].'/'.$event['computerActivate'].'</td>
 				<td class="ac">'.$event['removeAfterVisit'].'</td>
 				<td>'.$stack.'</td>
-				<td>'.implode($content, '<br />').'</td>
+				<td>'.implode('<br />', $content).'</td>
 				<td>'.$msg.'</td>
 			</tr>';
 		}
@@ -684,7 +684,7 @@ class H3MAPSCAN_PRINT {
 				<td class="nowrap" nowrap="nowrap">'.$this->h3mapscan->PlayerColors($event['players'], true).'</td>
 				<td class="ar">'.$event['first'].'</td>
 				<td class="ar">'.$event['interval'].'</td>
-				<td class="nowrap" nowrap="nowrap">'.implode($eres, '<br />').'</td>
+				<td class="nowrap" nowrap="nowrap">'.implode('<br />', $eres).'</td>
 				<td>'.nl2br($event['message']).'</td>
 			</tr>';
 		}
@@ -750,7 +750,7 @@ class H3MAPSCAN_PRINT {
 						<td class="ac">'.$subid.'</td>
 						<td>'.$color.'</td>
 						<td class="ac">'.count($lith).'</td>
-						<td>'.implode($lith, '<br />').'</td>
+						<td>'.implode('<br />', $lith).'</td>
 					</tr>';
 			}
 		}
