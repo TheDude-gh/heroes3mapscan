@@ -325,6 +325,7 @@
 		public const HOTA_EXTRA = 10;
 		public const HOTA_CLASS = 0;
 		public const HOTA_NOTBEFORE = 1;
+		public const HOTA_DIFFICULTY = 2;
 	};
 
 	//constants class with items names

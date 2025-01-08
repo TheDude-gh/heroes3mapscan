@@ -26,6 +26,7 @@ class H3MAPSCAN {
 	public const HOTA_SUBREV4 = 4;
 	public const HOTA_SUBREV5 = 5;
 	public const HOTA_SUBREV6 = 6;
+	public const HOTA_SUBREV7 = 7;
 
 	//variables to simplify version checks
 	private $isROE   = false;
@@ -250,7 +251,7 @@ class H3MAPSCAN {
 
 	//return true on valid version, false otherwise
 	private function CheckVersion() {
-		return (in_array($this->version, [$this::ROE, $this::AB, $this::SOD, $this::WOG]) || ($this->version == $this::HOTA && $this->hota_subrev <= $this::HOTA_SUBREV6));
+		return (in_array($this->version, [$this::ROE, $this::AB, $this::SOD, $this::WOG]) || ($this->version == $this::HOTA && $this->hota_subrev <= $this::HOTA_SUBREV7));
 	}
 
 	private function SaveMap() {
@@ -371,6 +372,9 @@ class H3MAPSCAN {
 			if($this->hota_subrev >= $this::HOTA_SUBREV4) {
 				$town_type_count = $this->br->ReadInt32();
 				$fixed_difficulty_level = $this->br->ReadUint8();
+			}
+			if($this->hota_subrev >= $this::HOTA_SUBREV7) {
+				$this->br->SkipBytes(1); //heroes_ignore_power_ratings
 			}
 		}
 
@@ -746,19 +750,23 @@ class H3MAPSCAN {
 			case VICTORY::NONE: break; // not
 			case VICTORY::ARTIFACT: // 00 - Acquire a specific artifact
 				$this->victoryCond['name'] = 'Acquire a specific artifact';
-				$this->victoryCond['art'] = $this->br->ReadUint8();
-				$this->victoryInfo = 'Acquire a specific artifact '.$this->GetArtifactById($this->victoryCond['art']);
-				if(!$this->isROE) {
-					$this->br->SkipBytes(1);
+				if ($this->isROE) {
+					$this->victoryCond['art'] = $this->br->ReadUint8();
 				}
+				else {
+					$this->victoryCond['art'] = $this->br->ReadUint16();
+				}
+				$this->victoryInfo = 'Acquire a specific artifact '.$this->GetArtifactById($this->victoryCond['art']);				
 				break;
 			case VICTORY::ACCCREATURES: // 01 - Accumulate creatures
 				$this->victoryCond['name'] = 'Accumulate creatures';
-				$monid = $this->br->ReadUint8();
-				$this->victoryCond['unit'] = $this->GetCreatureById($monid);
-				if(!$this->isROE) {
-					$this->br->SkipBytes(1);
+				if ($this->isROE) {
+					$monid = $this->br->ReadUint8();
 				}
+				else {
+					$monid = $this->br->ReadUint16();
+				}
+				$this->victoryCond['unit'] = $this->GetCreatureById($monid);
 				$this->victoryCond['unit_count'] = $this->br->ReadUint32();
 				$this->victoryInfo = 'Accumulate creatures, '.$this->victoryCond['unit'].', count '.comma($this->victoryCond['unit_count']);
 				break;
@@ -2311,11 +2319,18 @@ class H3MAPSCAN {
 
 			$this->br->SkipBytes(16);
 
+			if($this->hota_subrev >= $this::HOTA_SUBREV7) {
+				$event['difficulty'] = $this->br->ReadUint32();
+			}
+
 			if($this->hota_subrev >= $this::HOTA_SUBREV4) {
-				$this->br->ReadInt32(); //add_creature_count7b; //dreadnought bonus
-				$bit_count = $this->br->ReadInt32();
+				$this->br->SkipBytes(4); //add_creature_count7b; //dreadnought bonus
+				$bit_count = $this->br->ReadUInt32();
 				if($bit_count > 0) {
 					$this->br->SkipBytes(intval(($bit_count + 7) / 8));
+				}
+				if($this->hota_subrev >= $this::HOTA_SUBREV7) {
+					$this->br->SkipBytes(1); //applies_to_neutral_town
 				}
 			}
 
@@ -2519,6 +2534,11 @@ class H3MAPSCAN {
 					elseif($hotaquestid == QUESTMISSION::HOTA_NOTBEFORE) {
 						$quest['ReturnAfter'] = $this->br->ReadUint32();
 						$quest['Qtext'] = 'Return after '.$quest['ReturnAfter'].' days';
+					} 
+					elseif ($hotaquestid == QUESTMISSION::HOTA_DIFFICULTY) {
+						if($this->hota_subrev >= $this::HOTA_SUBREV7) {
+							$quest['Difficulty'] = $this->br->ReadUint32();
+						}
 					}
 				}
 				break;
@@ -2626,11 +2646,14 @@ class H3MAPSCAN {
 
 			$this->br->SkipBytes(16);
 
-			if($this->hota_subrev >= $this::HOTA_SUBREV4) {
+			if($this->hota_subrev >= $this::HOTA_SUBREV4 && $this->hota_subrev < $this::HOTA_SUBREV7) {
 				///skip this, not really useful
 				$this->br->SkipBytes(4);
 				$bitcount = $this->br->ReadUint32();
 				$this->br->SkipBytes(intval(($bitcount + 7) / 8));
+			}
+			if($this->hota_subrev >= $this::HOTA_SUBREV7) {
+				$this->br->SkipBytes(4); //difficulty_condition_flags;
 			}
 
 			$this->events[] = $event;

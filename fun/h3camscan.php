@@ -82,12 +82,12 @@ class H3CAMSCAN {
 		3, 4, 3, 7, 4, 3, 3,  //roe 7  0-6
 		4, 4, 4, 4, 3, 8,     //ab  6  7-12
 		4, 5, 4, 4, 4, 12, 4, //sod 7  13-19
-		3, 6, 4, 8, 32        //hota 20-24
+		3, 6, 4, 8, 32, 5,    //hota 20-25
 	];
 	// 1-3 2-3 3-3 4-4 5-3 6-3 7-3          22
 	// 8-8 9-4 10-4 11-4 12-3 13-4          27
 	// 14-4 15-4 16-4 17-5 18-4 19-12 20-4  37
-	// 21-3 22-6 23-3 24-8 25-32            52
+	// 21-3 22-6 23-3 24-8 25-32 26-5       57
 
 	public function __construct($mapfile, $modes = 0) {
 		$this->saveH3M = true;
@@ -342,8 +342,17 @@ class H3CAMSCAN {
 			$map->keepMonster[] = $this->br->ReadUint8();
 		}
 
-		$art_bytes = ($this->camversion == $this::HOTA) ? CAM_ARTIFACT_QUANTITY_HOTA : CAM_ARTIFACT_QUANTITY;
-		$art_bytes = intval(($art_bytes + 7) / 8);
+		if ($this->camversion == $this::SOD || $this->camversion == $this::WOG) {
+			$art_count = CAM_ARTIFACT_QUANTITY_SOD;
+		}
+		elseif ($this->camversion == $this::HOTA) {
+			$art_count = CAM_ARTIFACT_QUANTITY_HOTA;
+		}
+		else {
+			$art_count = CAM_ARTIFACT_QUANTITY;
+		}
+
+		$art_bytes = intval(($art_count + 7) / 8);
 		for ($i = 0; $i < $art_bytes; $i++) {
 			$map->keepArtifact[] = $this->br->ReadUint8();
 		}
